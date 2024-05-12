@@ -87,10 +87,10 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/patches/patches.bin
 # )
 
 # Generate mm_shader_cache.c from the MM shader cache
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.h
-    COMMAND file_to_c ${CMAKE_SOURCE_DIR}/shadercache/mm_shader_cache.bin mm_shader_cache_bytes ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.h
-    DEPENDS ${CMAKE_SOURCE_DIR}/shadercache/mm_shader_cache.bin
-)
+# add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.h
+#     COMMAND file_to_c ${CMAKE_SOURCE_DIR}/shadercache/mm_shader_cache.bin mm_shader_cache_bytes ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.h
+#     DEPENDS ${CMAKE_SOURCE_DIR}/shadercache/mm_shader_cache.bin
+# )
 
 # Recompile patches elf into patches.c
 # add_custom_command(OUTPUT
@@ -120,40 +120,40 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/ultramodern/ultrainit.cpp
     ${CMAKE_SOURCE_DIR}/ultramodern/rt64_layer.cpp
 
-#     ${CMAKE_SOURCE_DIR}/src/recomp/ai.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/cont.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/dp.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/eep.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/euc-jp.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/flash.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/math_routines.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/overlays.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/patch_loading.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/pak.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/pi.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/ultra_stubs.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/ultra_translation.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/print.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/recomp.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/sp.cpp
-#     ${CMAKE_SOURCE_DIR}/src/recomp/vi.cpp
-# 
-#     ${CMAKE_SOURCE_DIR}/src/main/main.cpp
-# 
-#     ${CMAKE_SOURCE_DIR}/src/game/input.cpp
-#     ${CMAKE_SOURCE_DIR}/src/game/controls.cpp
-#     ${CMAKE_SOURCE_DIR}/src/game/config.cpp
-#     ${CMAKE_SOURCE_DIR}/src/game/scene_table.cpp
-#     ${CMAKE_SOURCE_DIR}/src/game/debug.cpp
-#     ${CMAKE_SOURCE_DIR}/src/game/quicksaving.cpp
-#     ${CMAKE_SOURCE_DIR}/src/game/recomp_api.cpp
-# 
-#     ${CMAKE_SOURCE_DIR}/src/ui/ui_renderer.cpp
-#     ${CMAKE_SOURCE_DIR}/src/ui/ui_launcher.cpp
-#     ${CMAKE_SOURCE_DIR}/src/ui/ui_config.cpp
-#     ${CMAKE_SOURCE_DIR}/src/ui/ui_color_hack.cpp
-#     ${CMAKE_SOURCE_DIR}/src/ui/ui_rml_hacks.cpp
-# 
+    ${CMAKE_SOURCE_DIR}/src/recomp/ai.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/cont.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/dp.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/eep.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/euc-jp.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/flash.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/math_routines.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/overlays.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/patch_loading.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/pak.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/pi.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/ultra_stubs.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/ultra_translation.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/print.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/recomp.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/sp.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/vi.cpp
+
+    ${CMAKE_SOURCE_DIR}/src/main/main.cpp
+
+    ${CMAKE_SOURCE_DIR}/src/game/input.cpp
+    ${CMAKE_SOURCE_DIR}/src/game/controls.cpp
+    ${CMAKE_SOURCE_DIR}/src/game/config.cpp
+    ${CMAKE_SOURCE_DIR}/src/game/scene_table.cpp
+    ${CMAKE_SOURCE_DIR}/src/game/debug.cpp
+    ${CMAKE_SOURCE_DIR}/src/game/quicksaving.cpp
+    ${CMAKE_SOURCE_DIR}/src/game/recomp_api.cpp
+
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_renderer.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_launcher.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_config.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_color_hack.cpp
+    ${CMAKE_SOURCE_DIR}/src/ui/ui_rml_hacks.cpp
+
 #     ${CMAKE_SOURCE_DIR}/rsp/aspMain.cpp
 #     ${CMAKE_SOURCE_DIR}/rsp/njpgdspMain.cpp
 
@@ -209,7 +209,7 @@ if (WIN32)
             "${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/x64/dxil.dll"
             "${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/x64/dxcompiler.dll"
             $<TARGET_FILE_DIR:drmario64_recomp>)
-            
+
     set_target_properties(
         drmario64_recomp
         PROPERTIES
@@ -225,13 +225,6 @@ endif()
 if (LINUX)
     find_package(SDL2 REQUIRED)
     find_package(X11 REQUIRED)
-    
-    # Generate icon_bytes.c from the app icon PNG.
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.c ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.h
-        COMMAND file_to_c ${CMAKE_SOURCE_DIR}/icons/512.png icon_bytes ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.c ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.h 
-        DEPENDS ${CMAKE_SOURCE_DIR}/icons/512.png
-    )
-    target_sources(drmario64_recomp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.c)
 
     message(STATUS "SDL2_FOUND = ${SDL2_FOUND}")
     message(STATUS "SDL2_INCLUDE_DIRS = ${SDL2_INCLUDE_DIRS}")

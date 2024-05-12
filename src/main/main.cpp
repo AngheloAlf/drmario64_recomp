@@ -58,67 +58,10 @@ ultramodern::gfx_callbacks_t::gfx_data_t create_gfx() {
     return {};
 }
 
-#if defined(__gnu_linux__)
-#include "icon_bytes.h"
-
-bool SetImageAsIcon(const char* filename, SDL_Window* window)
-{
-    // Read data
-    int width, height, bytesPerPixel;
-    void* data = stbi_load_from_memory(reinterpret_cast<const uint8_t*>(icon_bytes), sizeof(icon_bytes), &width, &height, &bytesPerPixel, 4);
-
-    // Calculate pitch
-    int pitch;
-    pitch = width * 4;
-    pitch = (pitch + 3) & ~3;
-
-    // Setup relevance bitmask
-    int Rmask, Gmask, Bmask, Amask;
-
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-    Rmask = 0x000000FF;
-    Gmask = 0x0000FF00;
-    Bmask = 0x00FF0000;
-    Amask = 0xFF000000;
-#else
-    Rmask = 0xFF000000;
-    Gmask = 0x00FF0000;
-    Bmask = 0x0000FF00;
-    Amask = 0x000000FF;
-#endif
-
-    SDL_Surface* surface = nullptr;
-    if (data != nullptr) {
-        surface = SDL_CreateRGBSurfaceFrom(data, width, height, 32, pitch, Rmask, Gmask,
-                            Bmask, Amask);
-    }
-
-    if (surface == nullptr) {   
-        if (data != nullptr) {
-            stbi_image_free(data);
-        }
-        return false;
-	} else {
-        SDL_SetWindowIcon(window,surface);
-        SDL_FreeSurface(surface);
-        stbi_image_free(data);
-        return true;
-    }
-}
-#endif
-
 SDL_Window* window;
 
 ultramodern::WindowHandle create_window(ultramodern::gfx_callbacks_t::gfx_data_t) {
-    window = SDL_CreateWindow("Zelda 64: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 960, SDL_WINDOW_RESIZABLE );
-#if defined(__linux__)
-    SetImageAsIcon("icons/512.png",window);
-    if (ultramodern::get_graphics_config().wm_option == ultramodern::WindowMode::Fullscreen) { // TODO: Remove once RT64 gets native fullscreen support on Linux
-        SDL_SetWindowFullscreen(window,SDL_WINDOW_FULLSCREEN_DESKTOP);
-    } else {
-        SDL_SetWindowFullscreen(window,0);
-    }
-#endif
+    window = SDL_CreateWindow("Dr. Mario 64: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 960, SDL_WINDOW_RESIZABLE );
 
     if (window == nullptr) {
         exit_error("Failed to create window: %s\n", SDL_GetError());

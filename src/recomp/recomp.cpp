@@ -35,7 +35,7 @@ struct RomEntry {
 };
 
 const std::unordered_map<recomp::Game, RomEntry> game_roms {
-    { recomp::Game::MM, { 0xEF18B4A9E2386169ULL, std::u8string{recomp::mm_game_id} + u8".z64", "ZELDA MAJORA'S MASK" }},
+    { recomp::Game::MM, { 0xEF18B4A9E2386169ULL, std::u8string{recomp::mm_game_id} + u8".z64", "Dr. Mario 64" }},
 };
 
 bool check_hash(const std::vector<uint8_t>& rom_data, uint64_t expected_hash) {
@@ -214,17 +214,12 @@ recomp::RomValidationError recomp::select_rom(const std::filesystem::path& rom_p
             return recomp::RomValidationError::IncorrectVersion;
         }
         else {
-            if (game == recomp::Game::MM && std::string_view{ reinterpret_cast<const char*>(rom_data.data()) + 0x20, 19 } == "THE LEGEND OF ZELDA") {
-                return recomp::RomValidationError::NotYet;
-            }
-            else {
-                return recomp::RomValidationError::IncorrectRom;
-            }
+            return recomp::RomValidationError::IncorrectRom;
         }
     }
 
     write_file(recomp::get_app_folder_path() / game_entry.stored_filename, rom_data);
-    
+
     return recomp::RomValidationError::Good;
 }
 

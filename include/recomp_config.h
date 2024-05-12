@@ -6,18 +6,18 @@
 #include "../ultramodern/config.hpp"
 
 namespace recomp {
-    constexpr std::u8string_view program_id = u8"Zelda64Recompiled";
-    constexpr std::u8string_view mm_game_id = u8"mm.n64.us.1.0";
+    constexpr std::u8string_view program_id = u8"drmario64_recomp";
+    constexpr std::u8string_view mm_game_id = u8"drmario64.us";
 
     void load_config();
     void save_config();
-    
+
     void reset_input_bindings();
     void reset_cont_input_bindings();
     void reset_kb_input_bindings();
 
     std::filesystem::path get_app_folder_path();
-    
+
     bool get_debug_mode_enabled();
     void set_debug_mode_enabled(bool enabled);
 
