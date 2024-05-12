@@ -29,11 +29,11 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/rt64 ${CMAKE_BINARY_DIR}/rt64)
 
 # set(BUILD_SHARED_LIBS_SAVED "${BUILD_SHARED_LIBS}")
 set(BUILD_SHARED_LIBS OFF)
-# SET(LUNASVG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-# add_subdirectory(${CMAKE_SOURCE_DIR}/lib/lunasvg)
+SET(LUNASVG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/lunasvg)
 # set(BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS_SAVED}")
 SET(ENABLE_SVG_PLUGIN ON CACHE BOOL "" FORCE)
-# add_subdirectory(${CMAKE_SOURCE_DIR}/lib/RmlUi)
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/RmlUi)
 
 target_include_directories(rt64 PRIVATE ${CMAKE_BINARY_DIR}/rt64/src)
 
@@ -157,7 +157,7 @@ set (SOURCES
 #     ${CMAKE_SOURCE_DIR}/rsp/aspMain.cpp
 #     ${CMAKE_SOURCE_DIR}/rsp/njpgdspMain.cpp
 
-#     ${CMAKE_SOURCE_DIR}/lib/RmlUi/Backends/RmlUi_Platform_SDL.cpp
+    ${CMAKE_SOURCE_DIR}/lib/RmlUi/Backends/RmlUi_Platform_SDL.cpp
 
 #    ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c
 )
@@ -166,15 +166,15 @@ target_include_directories(drmario64_recomp PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/lib/concurrentqueue
     ${CMAKE_SOURCE_DIR}/lib/GamepadMotionHelpers
-#     ${CMAKE_SOURCE_DIR}/lib/RmlUi/Include
-#     ${CMAKE_SOURCE_DIR}/lib/RmlUi/Backends
+    ${CMAKE_SOURCE_DIR}/lib/RmlUi/Include
+    ${CMAKE_SOURCE_DIR}/lib/RmlUi/Backends
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/hlslpp/include
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/dxc/inc
     ${CMAKE_SOURCE_DIR}/lib/rt64/src
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/rhi
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/render
-#     ${CMAKE_SOURCE_DIR}/lib/freetype-windows-binaries/include
+    ${CMAKE_SOURCE_DIR}/lib/freetype-windows-binaries/include
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/nativefiledialog-extended/src/include
     ${CMAKE_BINARY_DIR}/shaders
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -239,14 +239,14 @@ if (LINUX)
     target_include_directories(drmario64_recomp PRIVATE ${X11_INCLUDE_DIR} ${X11_Xrandr_INCLUDE_PATH})
     target_link_libraries(drmario64_recomp PRIVATE ${X11_LIBRARIES} ${X11_Xrandr_LIB})
 
-#     find_package(Freetype REQUIRED)
+    find_package(Freetype REQUIRED)
 
-#     message(STATUS "FREETYPE_FOUND = ${FREETYPE_FOUND}")
-#     message(STATUS "FREETYPE_INCLUDE_DIRS = ${FREETYPE_INCLUDE_DIRS}")
-#     message(STATUS "FREETYPE_LIBRARIES = ${FREETYPE_LIBRARIES}")
+    message(STATUS "FREETYPE_FOUND = ${FREETYPE_FOUND}")
+    message(STATUS "FREETYPE_INCLUDE_DIRS = ${FREETYPE_INCLUDE_DIRS}")
+    message(STATUS "FREETYPE_LIBRARIES = ${FREETYPE_LIBRARIES}")
 
-#     include_directories(${FREETYPE_LIBRARIES})
-#     target_link_libraries(drmario64_recomp PRIVATE ${FREETYPE_LIBRARIES})
+    include_directories(${FREETYPE_LIBRARIES})
+    target_link_libraries(drmario64_recomp PRIVATE ${FREETYPE_LIBRARIES})
 
     set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
     set(THREADS_PREFER_PTHREAD_FLAG TRUE)
@@ -263,7 +263,7 @@ target_link_libraries(drmario64_recomp PRIVATE
     RmlCore
     RmlDebugger
     nfd
-#     lunasvg
+    lunasvg
 )
 
 # TODO fix the rt64 CMake script so that this doesn't need to be duplicated here
