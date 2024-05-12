@@ -1,5 +1,12 @@
 # drmario64_recomp
 
+## Dependencies
+
+- git
+- C (c17) and C++ (c++20) compilers
+- libsdl2-dev
+- libgtk-3-dev
+
 ## Build
 
 - Clone with submodules (`git clone --recurse-submodules` or
