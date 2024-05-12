@@ -1,0 +1,4 @@
+RecompiledFuncs/
+*.o
+*.elf
+build/

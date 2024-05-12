@@ -1,0 +1,12 @@
+[input]
+entrypoint = 0x80000400
+# Paths are relative to the location of this config file.
+elf_path = "drmario64.us.elf"
+output_func_path = "RecompiledFuncs"
+
+[patches]
+stubs = [
+]
+
+ignored = [
+]
