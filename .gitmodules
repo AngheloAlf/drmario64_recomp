@@ -1,0 +1,9 @@
+[submodule "lib/rt64"]
+	path = lib/rt64
+	url = git@github.com:rt64/rt64.git
+[submodule "lib/concurrentqueue"]
+	path = lib/concurrentqueue
+	url = git@github.com:cameron314/concurrentqueue.git
+[submodule "lib/GamepadMotionHelpers"]
+	path = lib/GamepadMotionHelpers
+	url = git@github.com:JibbSmart/GamepadMotionHelpers.git
