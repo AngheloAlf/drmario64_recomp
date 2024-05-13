@@ -35,7 +35,7 @@ struct RomEntry {
 };
 
 const std::unordered_map<recomp::Game, RomEntry> game_roms {
-    { recomp::Game::MM, { 0xEF18B4A9E2386169ULL, std::u8string{recomp::mm_game_id} + u8".z64", "Dr. Mario 64" }},
+    { recomp::Game::MM, { 0x960e3703f29d996dULL, std::u8string{recomp::mm_game_id} + u8".z64", "Dr. Mario 64" }},
 };
 
 bool check_hash(const std::vector<uint8_t>& rom_data, uint64_t expected_hash) {
@@ -313,6 +313,9 @@ void init(uint8_t* rdram, recomp_context* ctx) {
 
     // Load overlays in the first 1MB
     load_overlays(0x1000, (int32_t)entrypoint, 1024 * 1024);
+
+    // Load main_segment
+    load_overlays(0x011A70, (int32_t)0x80029C50, 0x899F0);
 
     // Initial 1MB DMA (rom address 0x1000 = physical address 0x10001000)
     recomp::do_rom_read(rdram, entrypoint, 0x10001000, 0x100000);

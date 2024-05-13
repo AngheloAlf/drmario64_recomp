@@ -26,6 +26,7 @@ std::vector<LoadedSection> loaded_sections{};
 std::unordered_map<int32_t, recomp_func_t*> func_map{};
 
 void load_overlay(size_t section_table_index, int32_t ram) {
+    fprintf(stderr, "%s: Loading overlay. section_table_index: %zu, ram: 0x%08X\n", __func__, section_table_index, (uint32_t)ram);
     const SectionTableEntry& section = section_table[section_table_index];
     for (size_t function_index = 0; function_index < section.num_funcs; function_index++) {
         const FuncEntry& func = section.funcs[function_index];
@@ -157,6 +158,7 @@ void init_overlays() {
 }
 
 extern "C" recomp_func_t * get_function(int32_t addr) {
+    fprintf(stderr, "%s: func_map.size: %li, addr: 0x%08X\n", __func__, func_map.size(), (uint32_t)addr);
     auto func_find = func_map.find(addr);
     if (func_find == func_map.end()) {
         fprintf(stderr, "Failed to find function at 0x%08X\n", addr);

@@ -122,9 +122,12 @@ void save_write_ptr(const void* in, uint32_t offset, uint32_t count) {
 }
 
 void save_write(RDRAM_ARG PTR(void) rdram_address, uint32_t offset, uint32_t count) {
+    fprintf(stderr, "<%s>: rdram_address: 0x%08X, offset: 0x%08X, count: 0x%08X\n", __func__, rdram_address, offset, count);
     {
         std::lock_guard lock { save_context.save_buffer_mutex };
         for (uint32_t i = 0; i < count; i++) {
+            // fprintf(stderr, "  <%s>: i: %i, \n", __func__, i);
+            // fprintf(stderr, "    MEM_B(i, rdram_address): %i, \n", MEM_B(i, rdram_address));
             save_context.save_buffer[offset + i] = MEM_B(i, rdram_address);
         }
     }

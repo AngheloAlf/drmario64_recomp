@@ -184,6 +184,14 @@ target_compile_options(drmario64_recomp PRIVATE
     -fms-extensions
 )
 
+# Add ASAN to everything
+# add_compile_options(-fsanitize=address)
+# add_link_options(-fsanitize=address)
+
+# Add ASAN to main program
+# target_compile_options(drmario64_recomp PRIVATE -fsanitize=address)
+# target_link_options(drmario64_recomp PRIVATE -fsanitize=address)
+
 if (WIN32)
     include(FetchContent)
     # Fetch SDL2 on windows
