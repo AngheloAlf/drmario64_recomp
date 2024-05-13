@@ -1,5 +1,9 @@
-RecompiledFuncs/
-*.o
-*.elf
 build/
 temp/
+/RecompiledFuncs/
+/rsp/
+*.o
+*.elf
+*.z64
+*.n64
+*.v64

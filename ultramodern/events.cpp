@@ -252,9 +252,6 @@ void task_thread_func(uint8_t* rdram, moodycamel::LightweightSemaphore* thread_r
         if (task->t.type == M_AUDTASK) {
             run_rsp_microcode(rdram, task, aspMain);
         }
-        else if (task->t.type == M_NJPEGTASK) {
-            run_rsp_microcode(rdram, task, njpgdspMain);
-        }
         else {
             fprintf(stderr, "Unknown task type: %" PRIu32 "\n", task->t.type);
             assert(false);

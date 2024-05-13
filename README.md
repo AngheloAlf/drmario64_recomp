@@ -4,18 +4,34 @@
 
 - git
 - C (c17) and C++ (c++20) compilers
-- libsdl2-dev
+- SDL2
+  - This has to be installed from source under Linux.
+  - For example:
+
+    ```bash
+    wget https://www.libsdl.org/release/SDL2-2.26.1.tar.gz
+    tar -xzf SDL2-2.26.1.tar.gz
+    cd SDL2-2.26.1
+    ./configure
+    make -j $(nproc)
+    sudo make install
+    ```
+
 - libgtk-3-dev
 
 ## Build
 
 - Clone with submodules (`git clone --recurse-submodules` or
   `git submodule update --init --recursive`).
-- Build the decomp repo (<https://github.com/AngheloAlf/drmario64>) and grab
-  the elf from `build/us/drmario64.us.elf`, put it on the root of this project.
+- Build the decomp repo (<https://github.com/AngheloAlf/drmario64>)
+  - Once it is built successfully, grab `build/us/drmario64.us.elf` and
+    `build/us/drmario64_uncompressed.us.z64` and put them in the root of this
+    project.
 - Build the N64Recomp repo (<https://github.com/Mr-Wiseguy/N64Recomp>, commit
   `TODO`).
 - Run `path/to/N64Recomp/build/N64Recomp drmario64.us.toml` on the root of this
+  project.
+- Run `path/to/N64Recomp/build/RSPRecomp aspMain.us.toml` on the root of this
   project.
 - Idk, I haven't gotten this far yet.
   - Maybe: `cmake -B build/` and then `cmake --build build --parallel $(nproc)`.
