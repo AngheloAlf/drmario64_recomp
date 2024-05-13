@@ -15,8 +15,7 @@
 #include "recomp_config.h"
 #include "xxHash/xxh3.h"
 #include "../ultramodern/ultramodern.hpp"
-#include "../../RecompiledPatches/patches_bin.h"
-#include "mm_shader_cache.h"
+// #include "mm_shader_cache.h"
 
 #ifdef _MSC_VER
 inline uint32_t byteswap(uint32_t val) {
@@ -300,12 +299,6 @@ void init_overlays();
 extern "C" void load_overlays(uint32_t rom, int32_t ram_addr, uint32_t size);
 extern "C" void unload_overlays(int32_t ram_addr, uint32_t size);
 
-void read_patch_data(uint8_t* rdram, gpr patch_data_address) {
-    for (size_t i = 0; i < sizeof(mm_patches_bin); i++) {
-        MEM_B(i, patch_data_address) = mm_patches_bin[i];
-    }
-}
-
 void init(uint8_t* rdram, recomp_context* ctx) {
     // Initialize the overlays
     init_overlays();
@@ -318,9 +311,6 @@ void init(uint8_t* rdram, recomp_context* ctx) {
 
     // Initial 1MB DMA (rom address 0x1000 = physical address 0x10001000)
     recomp::do_rom_read(rdram, entrypoint, 0x10001000, 0x100000);
-
-    // Read in any extra data from patches
-    read_patch_data(rdram, (gpr)(s32)0x80801000);
 
     // Set up stack pointer
     ctx->r29 = 0xFFFFFFFF803FFFF0u;
@@ -408,7 +398,9 @@ void recomp::start(ultramodern::WindowHandle window_handle, const ultramodern::a
                 if (!recomp::load_stored_rom(recomp::Game::MM)) {
                     recomp::message_box("Error opening stored ROM! Please restart this program.");
                 }
+#if 0
                 ultramodern::load_shader_cache({mm_shader_cache_bytes, sizeof(mm_shader_cache_bytes)});
+#endif
                 init(rdram, &context);
                 try {
                     recomp_entrypoint(rdram, &context);

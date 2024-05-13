@@ -18,7 +18,7 @@
 - Run `path/to/N64Recomp/build/N64Recomp drmario64.us.toml` on the root of this
   project.
 - Idk, I haven't gotten this far yet.
-  - Maybe: `cmake -B build/` and then `cmake --build build`.
+  - Maybe: `cmake -B build/` and then `cmake --build build --parallel $(nproc)`.
 
 ## Libraries Used and Projects Referenced
 

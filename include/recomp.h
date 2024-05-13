@@ -286,38 +286,6 @@ extern int32_t section_addresses[];
 // For Banjo-Tooie
 void recomp_syscall_handler(uint8_t* rdram, recomp_context* ctx, int32_t instruction_vram);
 
-// For the Mario Party games (not working)
-//// This has to be in this file so it can be inlined
-//struct jmp_buf_storage {
-//    jmp_buf buffer;
-//};
-//
-//struct RecompJmpBuf {
-//    int32_t owner;
-//    struct jmp_buf_storage* storage;
-//    uint64_t magic;
-//};
-//
-//// Randomly generated constant
-//#define SETJMP_MAGIC 0xe17afdfa939a437bu
-//
-//int32_t osGetThreadEx(void);
-//
-//#define setjmp_recomp(rdram, ctx) { \
-//    struct RecompJmpBuf* buf = (struct RecompJmpBuf*)(&rdram[(uint64_t)ctx->r4 - 0xFFFFFFFF80000000]); \
-//    \
-//    /* Check if this jump buffer was previously set up */ \
-//    if (buf->magic == SETJMP_MAGIC) { \
-//        /* If so, free the old jmp_buf */ \
-//        free(buf->storage); \
-//    } \
-//    \
-//    buf->magic = SETJMP_MAGIC; \
-//    buf->owner = osGetThreadEx(); \
-//    buf->storage = (struct jmp_buf_storage*)calloc(1, sizeof(struct jmp_buf_storage)); \
-//    ctx->r2 = setjmp(buf->storage->buffer); \
-//}
-
 void pause_self(uint8_t *rdram);
 
 #ifdef __cplusplus

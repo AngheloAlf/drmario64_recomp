@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 # set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter")
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
@@ -128,7 +128,6 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/recomp/flash.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/math_routines.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/overlays.cpp
-    ${CMAKE_SOURCE_DIR}/src/recomp/patch_loading.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/pak.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/pi.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/ultra_stubs.cpp
@@ -256,7 +255,7 @@ if (LINUX)
 endif()
 
 target_link_libraries(drmario64_recomp PRIVATE
-    PatchesLib
+#    PatchesLib
     RecompiledFuncs
     SDL2
     rt64

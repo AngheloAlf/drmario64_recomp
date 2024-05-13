@@ -135,8 +135,6 @@ extern "C" void unload_overlays(int32_t ram_addr, uint32_t size) {
     }
 }
 
-void load_patch_functions();
-
 void init_overlays() {
     for (size_t section_index = 0; section_index < num_code_sections; section_index++) {
         section_addresses[section_table[section_index].index] = section_table[section_index].ram_addr;
@@ -148,8 +146,6 @@ void init_overlays() {
             return a.rom_addr < b.rom_addr;
         }
     );
-
-    load_patch_functions();
 }
 
 extern "C" recomp_func_t * get_function(int32_t addr) {

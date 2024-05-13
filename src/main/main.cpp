@@ -45,7 +45,9 @@ void exit_error(const char* str, Ts ...args) {
 }
 
 ultramodern::gfx_callbacks_t::gfx_data_t create_gfx() {
+#if defined(_WIN32)
     SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
+#endif
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");

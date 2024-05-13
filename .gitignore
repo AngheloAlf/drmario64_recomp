@@ -2,3 +2,4 @@ RecompiledFuncs/
 *.o
 *.elf
 build/
+temp/
