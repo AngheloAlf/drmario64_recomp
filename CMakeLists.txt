@@ -127,7 +127,6 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/recomp/euc-jp.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/flash.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/math_routines.cpp
-    ${CMAKE_SOURCE_DIR}/src/recomp/overlays.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/pak.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/pi.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/ultra_stubs.cpp
@@ -289,4 +288,3 @@ build_pixel_shader (drmario64_recomp "shaders/InterfacePS.hlsl" "shaders/Interfa
 target_sources(drmario64_recomp PRIVATE ${SOURCES})
 
 set_property(TARGET drmario64_recomp PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-
