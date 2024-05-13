@@ -296,7 +296,6 @@ void run_thread_function(uint8_t* rdram, uint64_t addr, uint64_t sp, uint64_t ar
 extern "C" void recomp_entrypoint(uint8_t * rdram, recomp_context * ctx);
 gpr get_entrypoint_address();
 const char* get_rom_name();
-void init_overlays();
 extern "C" void load_overlays(uint32_t rom, int32_t ram_addr, uint32_t size);
 extern "C" void unload_overlays(int32_t ram_addr, uint32_t size);
 
@@ -309,9 +308,6 @@ void read_patch_data(uint8_t* rdram, gpr patch_data_address) {
 }
 
 void init(uint8_t* rdram, recomp_context* ctx) {
-    // Initialize the overlays
-    init_overlays();
-
     // Get entrypoint from recomp function
     gpr entrypoint = get_entrypoint_address();
 

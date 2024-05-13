@@ -127,6 +127,7 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/recomp/euc-jp.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/flash.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/math_routines.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/overlays.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/pak.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/pi.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/ultra_stubs.cpp
@@ -257,10 +258,15 @@ target_link_libraries(drmario64_recomp PRIVATE
     RecompiledFuncs
     SDL2
     rt64
-    RmlCore
-    RmlDebugger
+#     RmlCore
+    rmlui
+#     RmlDebugger
+    rmlui_debugger
     nfd
     lunasvg
+
+# Linux only
+    Xrandr
 )
 
 # TODO fix the rt64 CMake script so that this doesn't need to be duplicated here

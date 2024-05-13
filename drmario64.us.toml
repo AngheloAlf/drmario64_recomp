@@ -10,3 +10,55 @@ stubs = [
 
 ignored = [
 ]
+
+[[patches.function_sizes]]
+name = "bcmp"
+size = 0x000110
+
+[[patches.function_sizes]]
+name = "bcopy"
+size = 0x000320
+
+[[patches.function_sizes]]
+name = "bzero"
+size = 0x0000A0
+
+[[patches.function_sizes]]
+name = "sqrtf"
+size = 0x10
+
+[[patches.function_sizes]]
+name = "guMtxCatF"
+size = 0x000100
+
+[[patches.function_sizes]]
+name = "guMtxF2L"
+size = 0x000080
+
+[[patches.function_sizes]]
+name = "guMtxIdent"
+size = 0x60
+
+[[patches.function_sizes]]
+name = "guMtxIdentF"
+size = 0x60
+
+[[patches.function_sizes]]
+name = "guMtxL2F"
+size = 0x80
+
+[[patches.function_sizes]]
+name = "guScale"
+size = 0x0000c0
+
+[[patches.function_sizes]]
+name = "guScaleF"
+size = 0x000060
+
+[[patches.function_sizes]]
+name = "guTranslate"
+size = 0x0000E0
+
+[[patches.function_sizes]]
+name = "guTranslateF"
+size = 0x60
