@@ -33,8 +33,11 @@
   project.
 - Run `path/to/N64Recomp/build/RSPRecomp aspMain.us.toml` on the root of this
   project.
-- Idk, I haven't gotten this far yet.
-  - Maybe: `cmake -B build/` and then `cmake --build build --parallel $(nproc)`.
+- Build this repo by running `cmake -B build/` and then
+  `cmake --build build --parallel $(nproc)`.
+
+This game expects a vanilla US ROM to run, don't use the uncompressed one from
+the decomp.
 
 ## Libraries Used and Projects Referenced
 

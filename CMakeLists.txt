@@ -43,6 +43,7 @@ add_library(RecompiledFuncs STATIC)
 target_compile_options(RecompiledFuncs PRIVATE
     # -Wno-unused-but-set-variable
     -fno-strict-aliasing
+    -ggdb
 )
 
 target_include_directories(RecompiledFuncs PRIVATE
@@ -182,6 +183,7 @@ target_compile_options(drmario64_recomp PRIVATE
     -march=nehalem
     -fno-strict-aliasing
     -fms-extensions
+    -ggdb
 )
 
 # Add ASAN to everything
