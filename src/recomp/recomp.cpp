@@ -394,6 +394,8 @@ void recomp::start(ultramodern::WindowHandle window_handle, const ultramodern::a
     std::unique_ptr<uint8_t[]> rdram_buffer = std::make_unique<uint8_t[]>(ultramodern::rdram_size);
     std::memset(rdram_buffer.get(), 0, ultramodern::rdram_size);
 
+    fprintf(stderr, "rdram_buffer: %p\n", rdram_buffer.get());
+
     std::thread game_thread{[](ultramodern::WindowHandle window_handle, uint8_t* rdram) {
         debug_printf("[Recomp] Starting\n");
         
