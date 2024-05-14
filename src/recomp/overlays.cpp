@@ -158,7 +158,7 @@ void init_overlays() {
 }
 
 extern "C" recomp_func_t * get_function(int32_t addr) {
-    fprintf(stderr, "%s: func_map.size: %li, addr: 0x%08X\n", __func__, func_map.size(), (uint32_t)addr);
+    // fprintf(stderr, "%s: func_map.size: %li, addr: 0x%08X\n", __func__, func_map.size(), (uint32_t)addr);
     auto func_find = func_map.find(addr);
     if (func_find == func_map.end()) {
         fprintf(stderr, "Failed to find function at 0x%08X\n", addr);
