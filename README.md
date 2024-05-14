@@ -33,6 +33,9 @@
   project.
 - Run `path/to/N64Recomp/build/RSPRecomp aspMain.us.toml` on the root of this
   project.
+- Open `RecompiledFuncs/Idle_ThreadEntry.c` and add `pause_self(rdram);` after
+  line 83.
+  - This is a manual fix, sorry.
 - Build this repo by running `cmake -B build/` and then
   `cmake --build build --parallel $(nproc)`.
 
