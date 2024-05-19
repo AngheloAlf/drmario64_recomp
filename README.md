@@ -21,20 +21,23 @@
 
 ## Build
 
+The listed commits are known to build this repository.
+
 - Clone with submodules (`git clone --recurse-submodules` or
   `git submodule update --init --recursive`).
-- Build the decomp repo (<https://github.com/AngheloAlf/drmario64>)
+- Build the decomp repo (<https://github.com/AngheloAlf/drmario64>,
+  commit `1258578aea8053cf818cd1dda3e70829747b9ab7`)
   - Once it is built successfully, grab `build/us/drmario64.us.elf` and
     `build/us/drmario64_uncompressed.us.z64` and put them in the root of this
     project.
 - Build the N64Recomp repo (<https://github.com/Mr-Wiseguy/N64Recomp>, commit
-  `TODO`).
+  `5d46de6de019d7ec6102d4bb14a79b25e6b31202`).
 - Run `path/to/N64Recomp/build/N64Recomp drmario64.us.toml` on the root of this
   project.
 - Run `path/to/N64Recomp/build/RSPRecomp aspMain.us.toml` on the root of this
   project.
 - Open `RecompiledFuncs/Idle_ThreadEntry.c` and add `pause_self(rdram);` after
-  line 83.
+  line 82 (after `LOOKUP_FUNC(ctx->r2)(rdram, ctx);` and before `goto after_3;`).
   - This is a manual fix, sorry.
 - Build this repo by running `cmake -B build/` and then
   `cmake --build build --parallel $(nproc)`.

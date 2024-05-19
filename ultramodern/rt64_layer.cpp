@@ -235,8 +235,7 @@ void ultramodern::RT64Context::update_config(const ultramodern::GraphicsConfig& 
 }
 
 void ultramodern::RT64Context::enable_instant_present() {
-    // Enable the present early presentation mode for minimal latency.
-    app->enhancementConfig.presentation.mode = RT64::EnhancementConfiguration::Presentation::Mode::PresentEarly;
+    app->enhancementConfig.presentation.mode = RT64::EnhancementConfiguration::Presentation::Mode::Console;
 
     app->updateEnhancementConfig();
 }

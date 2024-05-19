@@ -44,6 +44,7 @@ target_compile_options(RecompiledFuncs PRIVATE
     # -Wno-unused-but-set-variable
     -fno-strict-aliasing
     -ggdb
+    -Wno-implicit-function-declaration
 )
 
 target_include_directories(RecompiledFuncs PRIVATE
@@ -274,10 +275,14 @@ target_link_libraries(drmario64_recomp PRIVATE
     rmlui_debugger
     nfd
     lunasvg
+)
 
-# Linux only
+# This needs to be at the bottom
+if (LINUX)
+target_link_libraries(drmario64_recomp PRIVATE
     Xrandr
 )
+endif()
 
 # TODO fix the rt64 CMake script so that this doesn't need to be duplicated here
 # For DXC

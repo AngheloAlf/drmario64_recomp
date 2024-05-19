@@ -260,6 +260,7 @@ extern "C" {
 void cop0_status_write(recomp_context* ctx, gpr value);
 gpr cop0_status_read(recomp_context* ctx);
 void switch_error(const char* func, uint32_t vram, uint32_t jtbl);
+#define SWITCH_ERROR(vram, jtbl, value) switch_error(__func__, vram, jtbl)
 void do_break(uint32_t vram);
 
 typedef void (recomp_func_t)(uint8_t* rdram, recomp_context* ctx);

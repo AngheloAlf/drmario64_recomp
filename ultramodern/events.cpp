@@ -115,7 +115,7 @@ void vi_thread_func() {
     // the game to generate new audio and gfx lists.
     ultramodern::set_native_thread_priority(ultramodern::ThreadPriority::Critical);
     using namespace std::chrono_literals;
-    
+
     int remaining_retraces = events_context.vi.retrace_count;
 
     while (!exited) {
@@ -138,7 +138,7 @@ void vi_thread_func() {
         // Calculate how many VIs have passed
         uint64_t new_total_vis = (ultramodern::time_since_start() * (60 * ultramodern::get_speed_multiplier()) / 1000ms) + 1;
         if (new_total_vis > total_vis + 1) {
-            //printf("Skipped % " PRId64 " frames in VI interupt thread!\n", new_total_vis - total_vis - 1);
+            printf("Skipped % " PRId64 " frames in VI interupt thread!\n", new_total_vis - total_vis - 1);
         }
         total_vis = new_total_vis;
 
@@ -153,7 +153,7 @@ void vi_thread_func() {
                 if (ultramodern::is_game_started()) {
                     if (events_context.vi.mq != NULLPTR) {
                         if (osSendMesg(PASS_RDRAM events_context.vi.mq, events_context.vi.msg, OS_MESG_NOBLOCK) == -1) {
-                            //printf("Game skipped a VI frame!\n");
+                            printf("Game skipped a VI frame!\n");
                         }
                     }
                 }
@@ -171,11 +171,11 @@ void vi_thread_func() {
             }
             if (events_context.ai.mq != NULLPTR) {
                 if (osSendMesg(PASS_RDRAM events_context.ai.mq, events_context.ai.msg, OS_MESG_NOBLOCK) == -1) {
-                    //printf("Game skipped a AI frame!\n");
+                    printf("Game skipped a AI frame!\n");
                 }
             }
         }
-                
+
         // TODO move recomp code out of ultramodern.
         recomp::update_rumble();
     }
@@ -198,7 +198,6 @@ uint16_t rspReciprocals[512];
 uint16_t rspInverseSquareRoots[512];
 
 using RspUcodeFunc = RspExitReason(uint8_t* rdram);
-extern RspUcodeFunc njpgdspMain;
 extern RspUcodeFunc aspMain;
 
 // From Ares emulator. For license details, see rsp_vu.h
@@ -315,7 +314,7 @@ void gfx_thread_func(uint8_t* rdram, moodycamel::LightweightSemaphore* thread_re
 
     // TODO move recomp code out of ultramodern.
     recomp::update_supported_options();
-    
+
     rsp_constants_init();
 
     // Notify the caller thread that this thread is ready.
@@ -540,7 +539,7 @@ void ultramodern::init_events(RDRAM_ARG ultramodern::WindowHandle window_handle)
     events_context.rdram = rdram;
     events_context.sp.gfx_thread = std::thread{ gfx_thread_func, rdram, &gfx_thread_ready, window_handle };
     events_context.sp.task_thread = std::thread{ task_thread_func, rdram, &task_thread_ready };
-    
+
     // Wait for the two sp threads to be ready before continuing to prevent the game from
     // running before we're able to handle RSP tasks.
     gfx_thread_ready.wait();
