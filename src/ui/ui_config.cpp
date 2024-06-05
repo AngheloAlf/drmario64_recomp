@@ -274,9 +274,13 @@ struct ControlOptionsContext {
 	int rumble_strength; // 0 to 100
 	int gyro_sensitivity; // 0 to 100
 	int mouse_sensitivity; // 0 to 100
+	int joystick_deadzone; // 0 to 100
 	recomp::TargetingMode targeting_mode;
 	recomp::BackgroundInputMode background_input_mode;
 	recomp::AutosaveMode autosave_mode;
+	recomp::CameraInvertMode camera_invert_mode;
+	recomp::AnalogCamMode analog_cam_mode;
+	recomp::CameraInvertMode analog_camera_invert_mode;
 };
 
 ControlOptionsContext control_options_context;
@@ -300,6 +304,10 @@ int recomp::get_mouse_sensitivity() {
 	return control_options_context.mouse_sensitivity;
 }
 
+int recomp::get_joystick_deadzone() {
+	return control_options_context.joystick_deadzone;
+}
+
 void recomp::set_gyro_sensitivity(int sensitivity) {
 	control_options_context.gyro_sensitivity = sensitivity;
 	if (general_model_handle) {
@@ -311,6 +319,13 @@ void recomp::set_mouse_sensitivity(int sensitivity) {
 	control_options_context.mouse_sensitivity = sensitivity;
 	if (general_model_handle) {
 		general_model_handle.DirtyVariable("mouse_sensitivity");
+	}
+}
+
+void recomp::set_joystick_deadzone(int deadzone) {
+	control_options_context.joystick_deadzone = deadzone;
+	if (general_model_handle) {
+		general_model_handle.DirtyVariable("joystick_deadzone");
 	}
 }
 
@@ -353,11 +368,46 @@ void recomp::set_autosave_mode(recomp::AutosaveMode mode) {
 	}
 }
 
+recomp::CameraInvertMode recomp::get_camera_invert_mode() {
+	return control_options_context.camera_invert_mode;
+}
+
+void recomp::set_camera_invert_mode(recomp::CameraInvertMode mode) {
+	control_options_context.camera_invert_mode = mode;
+	if (general_model_handle) {
+		general_model_handle.DirtyVariable("camera_invert_mode");
+	}
+}
+
+recomp::AnalogCamMode recomp::get_analog_cam_mode() {
+	return control_options_context.analog_cam_mode;
+}
+
+void recomp::set_analog_cam_mode(recomp::AnalogCamMode mode) {
+	control_options_context.analog_cam_mode = mode;
+	if (general_model_handle) {
+		general_model_handle.DirtyVariable("analog_cam_mode");
+	}
+}
+
+recomp::CameraInvertMode recomp::get_analog_camera_invert_mode() {
+	return control_options_context.analog_camera_invert_mode;
+}
+
+void recomp::set_analog_camera_invert_mode(recomp::CameraInvertMode mode) {
+	control_options_context.analog_camera_invert_mode = mode;
+	if (general_model_handle) {
+		general_model_handle.DirtyVariable("analog_camera_invert_mode");
+	}
+}
+
 struct SoundOptionsContext {
+	std::atomic<int> main_volume; // Option to control the volume of all sound
 	std::atomic<int> bgm_volume;
 	std::atomic<int> low_health_beeps_enabled; // RmlUi doesn't seem to like "true"/"false" strings for setting variants so an int is used here instead.
 	void reset() {
 		bgm_volume = 100;
+		main_volume = 100;
 		low_health_beeps_enabled = (int)true;
 	}
 	SoundOptionsContext() {
@@ -372,6 +422,17 @@ void recomp::reset_sound_settings() {
 	if (sound_options_model_handle) {
 		sound_options_model_handle.DirtyAllVariables();
 	}
+}
+
+void recomp::set_main_volume(int volume) {
+	sound_options_context.main_volume.store(volume);
+	if (sound_options_model_handle) {
+		sound_options_model_handle.DirtyVariable("main_volume");
+	}
+}
+
+int recomp::get_main_volume() {
+	return sound_options_context.main_volume.load();
 }
 
 void recomp::set_bgm_volume(int volume) {
@@ -835,9 +896,13 @@ public:
 		constructor.Bind("rumble_strength", &control_options_context.rumble_strength);
 		constructor.Bind("gyro_sensitivity", &control_options_context.gyro_sensitivity);
 		constructor.Bind("mouse_sensitivity", &control_options_context.mouse_sensitivity);
+		constructor.Bind("joystick_deadzone", &control_options_context.joystick_deadzone);
 		bind_option(constructor, "targeting_mode", &control_options_context.targeting_mode);
 		bind_option(constructor, "background_input_mode", &control_options_context.background_input_mode);
 		bind_option(constructor, "autosave_mode", &control_options_context.autosave_mode);
+		bind_option(constructor, "camera_invert_mode", &control_options_context.camera_invert_mode);
+		bind_option(constructor, "analog_cam_mode", &control_options_context.analog_cam_mode);
+		bind_option(constructor, "analog_camera_invert_mode", &control_options_context.analog_camera_invert_mode);
 
 		general_model_handle = constructor.GetModelHandle();
 	}
@@ -852,6 +917,7 @@ public:
 		
 		sound_options_model_handle = constructor.GetModelHandle();
 
+		bind_atomic(constructor, sound_options_model_handle, "main_volume", &sound_options_context.main_volume);
 		bind_atomic(constructor, sound_options_model_handle, "bgm_volume", &sound_options_context.bgm_volume);
 		bind_atomic(constructor, sound_options_model_handle, "low_health_beeps_enabled", &sound_options_context.low_health_beeps_enabled);
 	}

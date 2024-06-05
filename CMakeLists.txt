@@ -76,22 +76,16 @@ target_sources(RecompiledFuncs PRIVATE ${FUNC_C_SOURCES} ${FUNC_CXX_SOURCES})
 # set_source_files_properties(${CMAKE_SOURCE_DIR}/RecompiledPatches/patches.c PROPERTIES COMPILE_FLAGS -fno-strict-aliasing)
 
 # Build patches elf
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/patches/patches.bin
-    COMMAND make
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/patches
-    BYPRODUCTS ${CMAKE_SOURCE_DIR}/patches/patches.bin}
-)
+# add_custom_target(PatchesBin
+#     COMMAND make
+#     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/patches
+#     BYPRODUCTS ${CMAKE_SOURCE_DIR}/patches/patches.bin
+# )
 
 # Generate patches_bin.c from patches.bin
 # add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.c
 #     COMMAND file_to_c ${CMAKE_SOURCE_DIR}/patches/patches.bin mm_patches_bin ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.c ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.h 
 #     DEPENDS ${CMAKE_SOURCE_DIR}/patches/patches.bin
-# )
-
-# Generate mm_shader_cache.c from the MM shader cache
-# add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.h
-#     COMMAND file_to_c ${CMAKE_SOURCE_DIR}/shadercache/mm_shader_cache.bin mm_shader_cache_bytes ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.h
-#     DEPENDS ${CMAKE_SOURCE_DIR}/shadercache/mm_shader_cache.bin
 # )
 
 # Recompile patches elf into patches.c
@@ -107,6 +101,16 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/patches/patches.bin
 
 # Main executable
 add_executable(drmario64_recomp)
+
+# Generate mm_shader_cache.c from the MM shader cache if it exists
+# if (EXISTS ${CMAKE_SOURCE_DIR}/shadercache/mm_shader_cache.bin)
+#     set(HAS_MM_SHADER_CACHE TRUE)
+#     target_compile_definitions(drmario64_recomp PRIVATE HAS_MM_SHADER_CACHE)
+#     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.h
+#         COMMAND file_to_c ${CMAKE_SOURCE_DIR}/shadercache/mm_shader_cache.bin mm_shader_cache_bytes ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.h
+#         DEPENDS ${CMAKE_SOURCE_DIR}/shadercache/mm_shader_cache.bin
+#     )
+# endif()
 
 set (SOURCES
     ${CMAKE_SOURCE_DIR}/ultramodern/audio.cpp
@@ -127,9 +131,11 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/recomp/dp.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/eep.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/euc-jp.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/files.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/flash.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/math_routines.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/overlays.cpp
+    ${CMAKE_SOURCE_DIR}/src/recomp/patch_loading.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/pak.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/pi.cpp
     ${CMAKE_SOURCE_DIR}/src/recomp/ultra_stubs.cpp
@@ -158,9 +164,11 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/rsp/aspMain.cpp
 
     ${CMAKE_SOURCE_DIR}/lib/RmlUi/Backends/RmlUi_Platform_SDL.cpp
-
-#    ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c
 )
+
+if (HAS_MM_SHADER_CACHE)
+    list(APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c)
+endif()
 
 target_include_directories(drmario64_recomp PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -174,18 +182,27 @@ target_include_directories(drmario64_recomp PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/rt64/src
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/rhi
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/render
+    ${CMAKE_SOURCE_DIR}/lib/sse2neon
     ${CMAKE_SOURCE_DIR}/lib/freetype-windows-binaries/include
     ${CMAKE_SOURCE_DIR}/lib/rt64/src/contrib/nativefiledialog-extended/src/include
     ${CMAKE_BINARY_DIR}/shaders
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_compile_options(drmario64_recomp PRIVATE
-    -march=nehalem
-    -fno-strict-aliasing
-    -fms-extensions
-    -ggdb
-)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+    target_compile_options(drmario64_recomp PRIVATE
+        -march=nehalem
+        -fno-strict-aliasing
+        -fms-extensions
+        -ggdb
+    )
+else()
+    target_compile_options(drmario64_recomp PRIVATE
+        -fno-strict-aliasing
+        -fms-extensions
+        -ggdb
+    )
+endif()
 
 # Add ASAN to everything
 # add_compile_options(-fsanitize=address)
@@ -235,6 +252,13 @@ if (LINUX)
     find_package(SDL2 REQUIRED)
     find_package(X11 REQUIRED)
 
+    # Generate icon_bytes.c from the app icon PNG.
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.c ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.h
+        COMMAND file_to_c ${CMAKE_SOURCE_DIR}/icons/512.png icon_bytes ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.c ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.h 
+        DEPENDS ${CMAKE_SOURCE_DIR}/icons/512.png
+    )
+    target_sources(drmario64_recomp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/icon_bytes.c)
+
     message(STATUS "SDL2_FOUND = ${SDL2_FOUND}")
     message(STATUS "SDL2_INCLUDE_DIRS = ${SDL2_INCLUDE_DIRS}")
 
@@ -275,13 +299,6 @@ target_link_libraries(drmario64_recomp PRIVATE
     lunasvg
 )
 
-# This needs to be at the bottom
-if (LINUX)
-target_link_libraries(drmario64_recomp PRIVATE
-    Xrandr
-)
-endif()
-
 # TODO fix the rt64 CMake script so that this doesn't need to be duplicated here
 # For DXC
 set (DXC_COMMON_OPTS "-I${PROJECT_SOURCE_DIR}/src")
@@ -297,7 +314,19 @@ if (${WIN32})
     set (DXC "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/x64/dxc.exe")
     add_compile_definitions(NOMINMAX)
 else()
-    set (DXC "LD_LIBRARY_PATH=${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/lib/x64" "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/x64/dxc")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+        if (APPLE)
+            set (DXC "DYLD_LIBRARY_PATH=${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/lib/x64" "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/x64/dxc")
+        else()
+            set (DXC "LD_LIBRARY_PATH=${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/lib/x64" "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/x64/dxc")
+        endif()
+    else()
+        if (APPLE)
+            set (DXC "DYLD_LIBRARY_PATH=${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/lib/arm64" "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/arm64/dxc-macos")
+        else()
+            set (DXC "LD_LIBRARY_PATH=${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/lib/arm64" "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/arm64/dxc-linux")
+        endif()
+    endif()
 endif()
 
 build_vertex_shader(drmario64_recomp "shaders/InterfaceVS.hlsl" "shaders/InterfaceVS.hlsl")

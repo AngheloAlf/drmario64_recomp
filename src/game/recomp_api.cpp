@@ -1,14 +1,18 @@
 #include <cmath>
 
 #include "recomp.h"
+#include "recomp_overlays.h"
 #include "recomp_config.h"
 #include "recomp_input.h"
 #include "recomp_ui.h"
 #include "recomp_sound.h"
 #include "recomp_helpers.h"
-// #include "../patches/input.h"
-// #include "../patches/graphics.h"
-// #include "../patches/sound.h"
+#include "rt64_layer.h"
+#if 0
+#include "../patches/input.h"
+#include "../patches/graphics.h"
+#include "../patches/sound.h"
+#endif
 #include "../ultramodern/ultramodern.hpp"
 #include "../ultramodern/config.hpp"
 
@@ -77,7 +81,6 @@ extern "C" void recomp_get_targeting_mode(uint8_t* rdram, recomp_context* ctx) {
     _return(ctx, static_cast<int>(recomp::get_targeting_mode()));
 }
 
-
 extern "C" void recomp_get_bgm_volume(uint8_t* rdram, recomp_context* ctx) {
     _return(ctx, recomp::get_bgm_volume() / 100.0f);
 }
@@ -92,4 +95,76 @@ extern "C" void recomp_time_us(uint8_t* rdram, recomp_context* ctx) {
 
 extern "C" void recomp_autosave_enabled(uint8_t* rdram, recomp_context* ctx) {
     _return(ctx, static_cast<s32>(recomp::get_autosave_mode() == recomp::AutosaveMode::On));
+}
+
+extern "C" void recomp_load_overlays(uint8_t * rdram, recomp_context * ctx) {
+    u32 rom = _arg<0, u32>(rdram, ctx);
+    PTR(void) ram = _arg<1, PTR(void)>(rdram, ctx);
+    u32 size = _arg<2, u32>(rdram, ctx);
+
+    load_overlays(rom, ram, size);
+}
+
+extern "C" void recomp_high_precision_fb_enabled(uint8_t * rdram, recomp_context * ctx) {
+    _return(ctx, static_cast<s32>(ultramodern::RT64HighPrecisionFBEnabled()));
+}
+
+extern "C" void recomp_get_resolution_scale(uint8_t* rdram, recomp_context* ctx) {
+    _return(ctx, ultramodern::get_resolution_scale());
+}
+
+extern "C" void recomp_get_inverted_axes(uint8_t* rdram, recomp_context* ctx) {
+    s32* x_out = _arg<0, s32*>(rdram, ctx);
+    s32* y_out = _arg<1, s32*>(rdram, ctx);
+
+    recomp::CameraInvertMode mode = recomp::get_camera_invert_mode();
+
+    *x_out = (mode == recomp::CameraInvertMode::InvertX || mode == recomp::CameraInvertMode::InvertBoth);
+    *y_out = (mode == recomp::CameraInvertMode::InvertY || mode == recomp::CameraInvertMode::InvertBoth);
+}
+
+extern "C" void recomp_get_analog_inverted_axes(uint8_t* rdram, recomp_context* ctx) {
+    s32* x_out = _arg<0, s32*>(rdram, ctx);
+    s32* y_out = _arg<1, s32*>(rdram, ctx);
+
+    recomp::CameraInvertMode mode = recomp::get_analog_camera_invert_mode();
+
+    *x_out = (mode == recomp::CameraInvertMode::InvertX || mode == recomp::CameraInvertMode::InvertBoth);
+    *y_out = (mode == recomp::CameraInvertMode::InvertY || mode == recomp::CameraInvertMode::InvertBoth);
+}
+
+extern "C" void recomp_analog_cam_enabled(uint8_t* rdram, recomp_context* ctx) {
+    _return<s32>(ctx, recomp::get_analog_cam_mode() == recomp::AnalogCamMode::On);
+}
+
+extern "C" void recomp_get_camera_inputs(uint8_t* rdram, recomp_context* ctx) {
+    float* x_out = _arg<0, float*>(rdram, ctx);
+    float* y_out = _arg<1, float*>(rdram, ctx);
+
+    // TODO expose this in the menu
+    constexpr float radial_deadzone = 0.05f;
+
+    float x, y;
+
+    recomp::get_right_analog(&x, &y);
+
+    float magnitude = sqrtf(x * x + y * y);
+
+    if (magnitude < radial_deadzone) {
+        *x_out = 0.0f;
+        *y_out = 0.0f;
+    }
+    else {
+        float x_normalized = x / magnitude;
+        float y_normalized = y / magnitude;
+
+        *x_out = x_normalized * ((magnitude - radial_deadzone) / (1 - radial_deadzone));
+        *y_out = y_normalized * ((magnitude - radial_deadzone) / (1 - radial_deadzone));
+    }
+}
+
+extern "C" void recomp_set_right_analog_suppressed(uint8_t* rdram, recomp_context* ctx) {
+    s32 suppressed = _arg<0, s32>(rdram, ctx);
+
+    recomp::set_right_analog_suppressed(suppressed);
 }

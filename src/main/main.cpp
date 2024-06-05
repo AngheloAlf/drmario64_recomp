@@ -23,6 +23,7 @@
 #include "recomp_input.h"
 #include "recomp_config.h"
 #include "recomp_game.h"
+#include "recomp_sound.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -45,14 +46,17 @@ void exit_error(const char* str, Ts ...args) {
 }
 
 ultramodern::gfx_callbacks_t::gfx_data_t create_gfx() {
-#if defined(_WIN32)
     SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
-#endif
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");
     SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+
+#if defined(__linux__)
+    SDL_SetHint(SDL_HINT_VIDEODRIVER, "x11");
+#endif
+
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) > 0) {
         exit_error("Failed to initialize SDL2: %s\n", SDL_GetError());
     }
@@ -60,10 +64,67 @@ ultramodern::gfx_callbacks_t::gfx_data_t create_gfx() {
     return {};
 }
 
+#if defined(__gnu_linux__)
+#include "icon_bytes.h"
+
+bool SetImageAsIcon(const char* filename, SDL_Window* window)
+{
+    // Read data
+    int width, height, bytesPerPixel;
+    void* data = stbi_load_from_memory(reinterpret_cast<const uint8_t*>(icon_bytes), sizeof(icon_bytes), &width, &height, &bytesPerPixel, 4);
+
+    // Calculate pitch
+    int pitch;
+    pitch = width * 4;
+    pitch = (pitch + 3) & ~3;
+
+    // Setup relevance bitmask
+    int Rmask, Gmask, Bmask, Amask;
+
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+    Rmask = 0x000000FF;
+    Gmask = 0x0000FF00;
+    Bmask = 0x00FF0000;
+    Amask = 0xFF000000;
+#else
+    Rmask = 0xFF000000;
+    Gmask = 0x00FF0000;
+    Bmask = 0x0000FF00;
+    Amask = 0x000000FF;
+#endif
+
+    SDL_Surface* surface = nullptr;
+    if (data != nullptr) {
+        surface = SDL_CreateRGBSurfaceFrom(data, width, height, 32, pitch, Rmask, Gmask,
+                            Bmask, Amask);
+    }
+
+    if (surface == nullptr) {   
+        if (data != nullptr) {
+            stbi_image_free(data);
+        }
+        return false;
+	} else {
+        SDL_SetWindowIcon(window,surface);
+        SDL_FreeSurface(surface);
+        stbi_image_free(data);
+        return true;
+    }
+}
+#endif
+
 SDL_Window* window;
 
 ultramodern::WindowHandle create_window(ultramodern::gfx_callbacks_t::gfx_data_t) {
     window = SDL_CreateWindow("Dr. Mario 64: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 960, SDL_WINDOW_RESIZABLE );
+#if defined(__linux__)
+    SetImageAsIcon("icons/512.png",window);
+    if (ultramodern::get_graphics_config().wm_option == ultramodern::WindowMode::Fullscreen) { // TODO: Remove once RT64 gets native fullscreen support on Linux
+        SDL_SetWindowFullscreen(window,SDL_WINDOW_FULLSCREEN_DESKTOP);
+    } else {
+        SDL_SetWindowFullscreen(window,0);
+    }
+#endif
 
     if (window == nullptr) {
         exit_error("Failed to create window: %s\n", SDL_GetError());
@@ -78,6 +139,10 @@ ultramodern::WindowHandle create_window(ultramodern::gfx_callbacks_t::gfx_data_t
 #elif defined(__ANDROID__)
     static_assert(false && "Unimplemented");
 #elif defined(__linux__)
+    if (wmInfo.subsystem != SDL_SYSWM_X11) {
+        exit_error("Unsupported SDL2 video driver \"%s\". Only X11 is supported on Linux.\n", SDL_GetCurrentVideoDriver());
+    }
+
     return ultramodern::WindowHandle{ wmInfo.info.x11.display, wmInfo.info.x11.window };
 #else
     static_assert(false && "Unimplemented");
@@ -127,9 +192,10 @@ void queue_samples(int16_t* audio_data, size_t sample_count) {
 
     // Convert the audio from 16-bit values to floats and swap the audio channels into the
     // swap buffer to correct for the address xor caused by endianness handling.
+    float cur_main_volume = recomp::get_main_volume() / 100.0f; // Get the current main volume, normalized to 0.0-1.0.
     for (size_t i = 0; i < sample_count; i += input_channels) {
-        swap_buffer[i + 0 + duplicated_input_frames * input_channels] = audio_data[i + 1] * (0.5f / 32768.0f);
-        swap_buffer[i + 1 + duplicated_input_frames * input_channels] = audio_data[i + 0] * (0.5f / 32768.0f);
+        swap_buffer[i + 0 + duplicated_input_frames * input_channels] = audio_data[i + 1] * (0.5f / 32768.0f) * cur_main_volume;
+        swap_buffer[i + 1 + duplicated_input_frames * input_channels] = audio_data[i + 0] * (0.5f / 32768.0f) * cur_main_volume;
     }
     
     // TODO handle cases where a chunk is smaller than the duplicated frame count.
@@ -257,6 +323,10 @@ int main(int argc, char** argv) {
     SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), FALSE, &cfi);
 #endif
 
+#ifdef _WIN32
+    // Force wasapi on Windows, as there seems to be some issue with sample queueing with directsound currently.
+    SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
+#endif
     //printf("Current dir: %ls\n", std::filesystem::current_path().c_str());
 
     // Initialize SDL audio and set the output frequency.

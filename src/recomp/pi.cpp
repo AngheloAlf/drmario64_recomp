@@ -7,6 +7,7 @@
 #include "recomp.h"
 #include "recomp_game.h"
 #include "recomp_config.h"
+#include "recomp_files.h"
 #include "../ultramodern/ultra64.h"
 #include "../ultramodern/ultramodern.hpp"
 
@@ -25,6 +26,7 @@ void recomp::set_rom_contents(std::vector<uint8_t>&& new_rom) {
 // that involve physical addresses don't need to be handled for flashram.
 constexpr uint32_t sram_base = 0x08000000;
 constexpr uint32_t rom_base = 0x10000000;
+constexpr uint32_t drive_base = 0x06000000;
 
 constexpr uint32_t k1_to_phys(uint32_t addr) {
     return addr & 0x1FFFFFFF;
@@ -34,6 +36,12 @@ constexpr uint32_t phys_to_k1(uint32_t addr) {
     return addr | 0xA0000000;
 }
 
+extern "C" void __osPiGetAccess_recomp(uint8_t* rdram, recomp_context* ctx) {
+}
+
+extern "C" void __osPiRelAccess_recomp(uint8_t* rdram, recomp_context* ctx) {
+}
+
 extern "C" void osCartRomInit_recomp(uint8_t* rdram, recomp_context* ctx) {
     OSPiHandle* handle = TO_PTR(OSPiHandle, ultramodern::cart_handle);
     handle->type = 0; // cart
@@ -41,6 +49,15 @@ extern "C" void osCartRomInit_recomp(uint8_t* rdram, recomp_context* ctx) {
     handle->domain = 0;
 
     ctx->r2 = (gpr)ultramodern::cart_handle;
+}
+
+extern "C" void osDriveRomInit_recomp(uint8_t * rdram, recomp_context * ctx) {
+    OSPiHandle* handle = TO_PTR(OSPiHandle, ultramodern::drive_handle);
+    handle->type = 1; // bulk
+    handle->baseAddress = phys_to_k1(drive_base);
+    handle->domain = 0;
+
+    ctx->r2 = (gpr)ultramodern::drive_handle;
 }
 
 extern "C" void osCreatePiManager_recomp(uint8_t* rdram, recomp_context* ctx) {
@@ -61,6 +78,16 @@ void recomp::do_rom_read(uint8_t* rdram, gpr ram_address, uint32_t physical_addr
     }
 }
 
+void recomp::do_rom_pio(uint8_t* rdram, gpr ram_address, uint32_t physical_addr) {
+    assert((physical_addr & 0x3) == 0 && "PIO not 4-byte aligned in device, currently unsupported");
+    assert((ram_address & 0x3) == 0 && "PIO not 4-byte aligned in RDRAM, currently unsupported");
+    uint8_t* rom_addr = rom.data() + physical_addr - rom_base;
+    MEM_B(0, ram_address) = *rom_addr++;
+    MEM_B(1, ram_address) = *rom_addr++;
+    MEM_B(2, ram_address) = *rom_addr++;
+    MEM_B(3, ram_address) = *rom_addr++;
+}
+
 struct {
     std::array<char, 0x20000> save_buffer;
     std::thread saving_thread;
@@ -76,14 +103,23 @@ std::filesystem::path get_save_file_path() {
 }
 
 void update_save_file() {
-    std::ofstream save_file{ get_save_file_path(), std::ios_base::binary };
+    bool saving_failed = false;
+    {
+        std::ofstream save_file = recomp::open_output_file_with_backup(get_save_file_path(), std::ios_base::binary);
 
-    if (save_file.good()) {
-        std::lock_guard lock{ save_context.save_buffer_mutex };
-        save_file.write(save_context.save_buffer.data(), save_context.save_buffer.size());
-    } else {
-        fprintf(stderr, "Failed to save!\n");
-        std::exit(EXIT_FAILURE);
+        if (save_file.good()) {
+            std::lock_guard lock{ save_context.save_buffer_mutex };
+            save_file.write(save_context.save_buffer.data(), save_context.save_buffer.size());
+        }
+        else {
+            saving_failed = false;
+        }
+    }
+    if (!saving_failed) {
+        saving_failed = !recomp::finalize_output_file_with_backup(get_save_file_path());
+    }
+    if (saving_failed) {
+        recomp::message_box("Failed to write to the save file. Check your file permissions and whether the save folder has been moved to Dropbox or similar, as this can cause issues.");
     }
 }
 
@@ -122,14 +158,9 @@ void save_write_ptr(const void* in, uint32_t offset, uint32_t count) {
 }
 
 void save_write(RDRAM_ARG PTR(void) rdram_address, uint32_t offset, uint32_t count) {
-    fprintf(stderr, "<%s>: rdram_address: 0x%08X, offset: 0x%08X, count: 0x%08X\n", __func__, rdram_address, offset, count);
-    fprintf(stderr, "  rdram: %p\n", rdram);
     {
         std::lock_guard lock { save_context.save_buffer_mutex };
         for (uint32_t i = 0; i < count; i++) {
-            // fprintf(stderr, "  i: %u\n", i);
-            // fprintf(stderr, "    &MEM_B(i, rdram_address): %p\n", &MEM_B(i, rdram_address));
-            // fprintf(stderr, "    MEM_B(i, rdram_address): %i\n", MEM_B(i, rdram_address));
             save_context.save_buffer[offset + i] = MEM_B(i, rdram_address);
         }
     }
@@ -160,10 +191,11 @@ void ultramodern::init_saving(RDRAM_ARG1) {
     std::filesystem::create_directories(save_file_path.parent_path());
 
     // Read the save file if it exists.
-    std::ifstream save_file{ save_file_path, std::ios_base::binary };
+    std::ifstream save_file = recomp::open_input_file_with_backup(save_file_path, std::ios_base::binary);
     if (save_file.good()) {
         save_file.read(save_context.save_buffer.data(), save_context.save_buffer.size());
-    } else {
+    }
+    else {
         // Otherwise clear the save file to all zeroes.
         save_context.save_buffer.fill(0);
     }
@@ -252,7 +284,7 @@ extern "C" void osEPiReadIo_recomp(RDRAM_ARG recomp_context * ctx) {
 
     if (physical_addr > rom_base) {
         // cart rom
-        recomp::do_rom_read(PASS_RDRAM dramAddr, physical_addr, sizeof(uint32_t));
+        recomp::do_rom_pio(PASS_RDRAM dramAddr, physical_addr);
     } else {
         // sram
         assert(false && "SRAM ReadIo unimplemented");

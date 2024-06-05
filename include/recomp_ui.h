@@ -5,7 +5,6 @@
 #include <string>
 
 #include "SDL.h"
-#include "SDL_video.h"
 #include "RmlUi/Core.h"
 
 namespace Rml {

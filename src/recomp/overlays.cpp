@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <vector>
 #include "recomp.h"
+#include "recomp_overlays.h"
 #include "../RecompiledFuncs/recomp_overlays.inl"
 
 constexpr size_t num_code_sections = ARRLEN(section_table);
@@ -26,7 +27,6 @@ std::vector<LoadedSection> loaded_sections{};
 std::unordered_map<int32_t, recomp_func_t*> func_map{};
 
 void load_overlay(size_t section_table_index, int32_t ram) {
-    fprintf(stderr, "%s: Loading overlay. section_table_index: %zu, ram: 0x%08X\n", __func__, section_table_index, (uint32_t)ram);
     const SectionTableEntry& section = section_table[section_table_index];
     for (size_t function_index = 0; function_index < section.num_funcs; function_index++) {
         const FuncEntry& func = section.funcs[function_index];
@@ -136,9 +136,7 @@ extern "C" void unload_overlays(int32_t ram_addr, uint32_t size) {
     }
 }
 
-#if 0
 void load_patch_functions();
-#endif
 
 void init_overlays() {
     for (size_t section_index = 0; section_index < num_code_sections; section_index++) {
@@ -152,13 +150,10 @@ void init_overlays() {
         }
     );
 
-#if 0
     load_patch_functions();
-#endif
 }
 
 extern "C" recomp_func_t * get_function(int32_t addr) {
-    // fprintf(stderr, "<%s>: func_map.size: %li, addr: 0x%08X\n", __func__, func_map.size(), (uint32_t)addr);
     auto func_find = func_map.find(addr);
     if (func_find == func_map.end()) {
         fprintf(stderr, "Failed to find function at 0x%08X\n", addr);
@@ -167,3 +162,4 @@ extern "C" recomp_func_t * get_function(int32_t addr) {
     }
     return func_find->second;
 }
+

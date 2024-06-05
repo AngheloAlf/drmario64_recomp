@@ -8,6 +8,7 @@
 namespace recomp {
     constexpr std::u8string_view program_id = u8"drmario64_recomp";
     constexpr std::u8string_view mm_game_id = u8"drmario64.us";
+    constexpr std::string_view program_name = "Dr. Mario 64: Recompiled";
 
     void load_config();
     void save_config();
@@ -27,13 +28,27 @@ namespace recomp {
 		OptionCount
     };
 
+    enum class AnalogCamMode {
+        On,
+        Off,
+		OptionCount
+    };
+
     NLOHMANN_JSON_SERIALIZE_ENUM(recomp::AutosaveMode, {
         {recomp::AutosaveMode::On, "On"},
         {recomp::AutosaveMode::Off, "Off"}
     });
 
+    NLOHMANN_JSON_SERIALIZE_ENUM(recomp::AnalogCamMode, {
+        {recomp::AnalogCamMode::On, "On"},
+        {recomp::AnalogCamMode::Off, "Off"}
+    });
+
     AutosaveMode get_autosave_mode();
     void set_autosave_mode(AutosaveMode mode);
+
+    AnalogCamMode get_analog_cam_mode();
+    void set_analog_cam_mode(AnalogCamMode mode);
 };
 
 #endif

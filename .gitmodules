@@ -16,3 +16,6 @@
 [submodule "lib/freetype-windows-binaries"]
 	path = lib/freetype-windows-binaries
 	url = git@github.com:ubawurinna/freetype-windows-binaries.git
+[submodule "lib/sse2neon"]
+	path = lib/sse2neon
+	url = git@github.com:DLTcollab/sse2neon.git

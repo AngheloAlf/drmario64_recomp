@@ -36,9 +36,13 @@ namespace recomp {
         DEFINE_INPUT(X_AXIS_NEG, 0, "Left") \
         DEFINE_INPUT(X_AXIS_POS, 0, "Right") \
 
+    #define DEFINE_RECOMP_UI_INPUTS() \
+        DEFINE_INPUT(TOGGLE_MENU, 0, "Toggle Menu")
+
     #define DEFINE_ALL_INPUTS() \
         DEFINE_N64_BUTTON_INPUTS() \
-        DEFINE_N64_AXIS_INPUTS()
+        DEFINE_N64_AXIS_INPUTS() \
+        DEFINE_RECOMP_UI_INPUTS()
 
     // Enum containing every recomp input.
     #define DEFINE_INPUT(name, value, readable) name,
@@ -67,6 +71,7 @@ namespace recomp {
     bool get_input_digital(const std::span<const recomp::InputField> fields);
     void get_gyro_deltas(float* x, float* y);
     void get_mouse_deltas(float* x, float* y);
+    void get_right_analog(float* x, float* y);
 
     enum class InputDevice {
         Controller,
@@ -103,7 +108,34 @@ namespace recomp {
         std::vector<InputField> analog_right;
         std::vector<InputField> analog_up;
         std::vector<InputField> analog_down;
+
+        std::vector<InputField> toggle_menu;
     };
+
+    constexpr const std::vector<InputField>& get_default_mapping_for_input(const DefaultN64Mappings& defaults, const GameInput input) {
+        switch (input) {
+            case GameInput::A: return defaults.a;
+            case GameInput::B: return defaults.b;
+            case GameInput::L: return defaults.l;
+            case GameInput::R: return defaults.r;
+            case GameInput::Z: return defaults.z;
+            case GameInput::START: return defaults.start;
+            case GameInput::C_LEFT: return defaults.c_left;
+            case GameInput::C_RIGHT: return defaults.c_right;
+            case GameInput::C_UP: return defaults.c_up;
+            case GameInput::C_DOWN: return defaults.c_down;
+            case GameInput::DPAD_LEFT: return defaults.dpad_left;
+            case GameInput::DPAD_RIGHT: return defaults.dpad_right;
+            case GameInput::DPAD_UP: return defaults.dpad_up;
+            case GameInput::DPAD_DOWN: return defaults.dpad_down;
+            case GameInput::X_AXIS_NEG: return defaults.analog_left;
+            case GameInput::X_AXIS_POS: return defaults.analog_right;
+            case GameInput::Y_AXIS_POS: return defaults.analog_up;
+            case GameInput::Y_AXIS_NEG: return defaults.analog_down;
+            case GameInput::TOGGLE_MENU: return defaults.toggle_menu;
+            default: return std::vector<InputField>();
+        }
+    }
 
     extern const DefaultN64Mappings default_n64_keyboard_mappings;
     extern const DefaultN64Mappings default_n64_controller_mappings;
@@ -129,8 +161,12 @@ namespace recomp {
     // Gyro and mouse sensitivities range from 0 to 100.
     int get_gyro_sensitivity();
     int get_mouse_sensitivity();
+    int get_joystick_deadzone();
     void set_gyro_sensitivity(int strength);
     void set_mouse_sensitivity(int strength);
+    void set_joystick_deadzone(int strength);
+    void apply_joystick_deadzone(float x_in, float y_in, float* x_out, float* y_out);
+    void set_right_analog_suppressed(bool suppressed);
 
     enum class TargetingMode {
         Switch,
@@ -159,6 +195,27 @@ namespace recomp {
 
     BackgroundInputMode get_background_input_mode();
     void set_background_input_mode(BackgroundInputMode mode);
+
+    enum class CameraInvertMode {
+        InvertNone,
+        InvertX,
+        InvertY,
+        InvertBoth,
+		OptionCount
+    };
+
+    NLOHMANN_JSON_SERIALIZE_ENUM(recomp::CameraInvertMode, {
+        {recomp::CameraInvertMode::InvertNone, "InvertNone"},
+        {recomp::CameraInvertMode::InvertX, "InvertX"},
+        {recomp::CameraInvertMode::InvertY, "InvertY"},
+        {recomp::CameraInvertMode::InvertBoth, "InvertBoth"}
+    });
+
+    CameraInvertMode get_camera_invert_mode();
+    void set_camera_invert_mode(CameraInvertMode mode);
+
+    CameraInvertMode get_analog_camera_invert_mode();
+    void set_analog_camera_invert_mode(CameraInvertMode mode);
 
     bool game_input_disabled();
     bool all_input_disabled();

@@ -30,7 +30,9 @@ void ultramodern::check_running_queue(RDRAM_ARG1) {
 }
 
 extern "C" void pause_self(RDRAM_ARG1) {
+    // while (true) {
     // Wait until an external message arrives, then allow the next thread to run.
     ultramodern::wait_for_external_message(PASS_RDRAM1);
     ultramodern::check_running_queue(PASS_RDRAM1);
+    // }
 }

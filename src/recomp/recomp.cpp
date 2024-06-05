@@ -11,12 +11,17 @@
 #include <fstream>
 #include <iostream>
 #include "recomp.h"
+#include "recomp_overlays.h"
 #include "recomp_game.h"
 #include "recomp_config.h"
 #include "xxHash/xxh3.h"
 #include "../ultramodern/ultramodern.hpp"
-// #include "../../RecompiledPatches/patches_bin.h"
-// #include "mm_shader_cache.h"
+#if 0
+#include "../../RecompiledPatches/patches_bin.h"
+#endif
+#ifdef HAS_MM_SHADER_CACHE
+#include "mm_shader_cache.h"
+#endif
 
 #ifdef _MSC_VER
 inline uint32_t byteswap(uint32_t val) {
@@ -214,7 +219,12 @@ recomp::RomValidationError recomp::select_rom(const std::filesystem::path& rom_p
             return recomp::RomValidationError::IncorrectVersion;
         }
         else {
-            return recomp::RomValidationError::IncorrectRom;
+            if (game == recomp::Game::MM && std::string_view{ reinterpret_cast<const char*>(rom_data.data()) + 0x20, 19 } == "THE LEGEND OF ZELDA") {
+                return recomp::RomValidationError::NotYet;
+            }
+            else {
+                return recomp::RomValidationError::IncorrectRom;
+            }
         }
     }
 
@@ -296,8 +306,6 @@ void run_thread_function(uint8_t* rdram, uint64_t addr, uint64_t sp, uint64_t ar
 extern "C" void recomp_entrypoint(uint8_t * rdram, recomp_context * ctx);
 gpr get_entrypoint_address();
 const char* get_rom_name();
-extern "C" void load_overlays(uint32_t rom, int32_t ram_addr, uint32_t size);
-extern "C" void unload_overlays(int32_t ram_addr, uint32_t size);
 
 void read_patch_data(uint8_t* rdram, gpr patch_data_address) {
 #if 0
@@ -308,6 +316,9 @@ void read_patch_data(uint8_t* rdram, gpr patch_data_address) {
 }
 
 void init(uint8_t* rdram, recomp_context* ctx) {
+    // Initialize the overlays
+    init_overlays();
+
     // Get entrypoint from recomp function
     gpr entrypoint = get_entrypoint_address();
 
@@ -391,8 +402,6 @@ void recomp::start(ultramodern::WindowHandle window_handle, const ultramodern::a
     std::unique_ptr<uint8_t[]> rdram_buffer = std::make_unique<uint8_t[]>(ultramodern::rdram_size);
     std::memset(rdram_buffer.get(), 0, ultramodern::rdram_size);
 
-    fprintf(stderr, "rdram_buffer: %p\n", rdram_buffer.get());
-
     std::thread game_thread{[](ultramodern::WindowHandle window_handle, uint8_t* rdram) {
         debug_printf("[Recomp] Starting\n");
         
@@ -408,9 +417,11 @@ void recomp::start(ultramodern::WindowHandle window_handle, const ultramodern::a
                 if (!recomp::load_stored_rom(recomp::Game::MM)) {
                     recomp::message_box("Error opening stored ROM! Please restart this program.");
                 }
-#if 0
+
+                #ifdef HAS_MM_SHADER_CACHE
                 ultramodern::load_shader_cache({mm_shader_cache_bytes, sizeof(mm_shader_cache_bytes)});
-#endif
+                #endif
+
                 init(rdram, &context);
                 try {
                     recomp_entrypoint(rdram, &context);
