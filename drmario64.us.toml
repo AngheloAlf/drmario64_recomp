@@ -11,59 +11,25 @@ stubs = [
 ignored = [
 ]
 
-[[patches.function_sizes]]
-name = "bcmp"
-size = 0x000110
+function_sizes = [
+    { name = "bcmp", size = 0x000110 },
+    { name = "bcopy", size = 0x000320 },
+    { name = "bzero", size = 0x0000A0 },
+    { name = "sqrtf", size = 0x10 },
+    { name = "guMtxCatF", size = 0x000100 },
+    { name = "guMtxF2L", size = 0x000080 },
+    { name = "guMtxIdent", size = 0x60 },
+    { name = "guMtxIdentF", size = 0x60 },
+    { name = "guMtxL2F", size = 0x80 },
+    { name = "guScale", size = 0x0000c0 },
+    { name = "guScaleF", size = 0x000060 },
+    { name = "guTranslate", size = 0x0000E0 },
+    { name = "guTranslateF", size = 0x60 },
+]
 
-[[patches.function_sizes]]
-name = "bcopy"
-size = 0x000320
-
-[[patches.function_sizes]]
-name = "bzero"
-size = 0x0000A0
-
-[[patches.function_sizes]]
-name = "sqrtf"
-size = 0x10
-
-[[patches.function_sizes]]
-name = "guMtxCatF"
-size = 0x000100
-
-[[patches.function_sizes]]
-name = "guMtxF2L"
-size = 0x000080
-
-[[patches.function_sizes]]
-name = "guMtxIdent"
-size = 0x60
-
-[[patches.function_sizes]]
-name = "guMtxIdentF"
-size = 0x60
-
-[[patches.function_sizes]]
-name = "guMtxL2F"
-size = 0x80
-
-[[patches.function_sizes]]
-name = "guScale"
-size = 0x0000c0
-
-[[patches.function_sizes]]
-name = "guScaleF"
-size = 0x000060
-
-[[patches.function_sizes]]
-name = "guTranslate"
-size = 0x0000E0
-
-[[patches.function_sizes]]
-name = "guTranslateF"
-size = 0x60
-
-[[patches.hook]]
-func = "Idle_ThreadEntry"
-before_vram = 0x800005FC
-text = "pause_self(rdram);"
+hook = [
+    # Load decompressed main segment
+    { func = "Main_ThreadEntry", before_vram = 0x80000544, text = "load_overlays(0x011A70, (int32_t)0x80029C50, 0x899F0);" },
+    # Yield infinite loop in idle thread
+    { func = "Idle_ThreadEntry", before_vram = 0x800005FC, text = "pause_self(rdram);" },
+]
