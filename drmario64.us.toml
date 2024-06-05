@@ -62,3 +62,8 @@ size = 0x0000E0
 [[patches.function_sizes]]
 name = "guTranslateF"
 size = 0x60
+
+[[patches.hook]]
+func = "Idle_ThreadEntry"
+before_vram = 0x800005FC
+text = "pause_self(rdram);"
