@@ -7,3 +7,6 @@ temp/
 *.z64
 *.n64
 *.v64
+
+N64Recomp
+RSPRecomp

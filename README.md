@@ -14,7 +14,8 @@
 ## Dependencies
 
 - git
-- C (c17) and C++ (c++20) compilers
+- C (c17) and C++ (c++20) compilers.
+  - Clang 15 or newer is recommended.
 - SDL2
   - This has to be installed from source under Linux.
   - For example:
@@ -47,8 +48,15 @@ The listed commits are known to be able to build this repository.
   project.
 - Run `path/to/N64Recomp/build/RSPRecomp aspMain.us.toml` on the root of this
   project.
-- Build this repo by running `cmake -B build/` and then
-  `cmake --build build --parallel $(nproc)`.
+- Build this repo by running:
+
+```bash
+cmake -B build/ -G Ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j $(nproc) --config Release
+```
+
+Possible options for the build type are `Debug`, `Release`, `RelWithDebInfo` and
+`MinSizeRel`
 
 This game expects a vanilla US ROM to run, don't use the uncompressed one from
 the decomp.
@@ -60,6 +68,10 @@ the decomp.
   most files were copied from here.
 - [Dr. Mario 64 decompilation](https://github.com/AngheloAlf/drmario64)
 - [RT64](https://github.com/rt64/rt64) for the project's rendering engine
+- [RmlUi](https://github.com/mikke89/RmlUi) for building the menus and launcher
+- [lunasvg](https://github.com/sammycage/lunasvg) for SVG rendering, used by
+  RmlUi
+- [FreeType](https://freetype.org/) for font rendering, used by RmlUi
 - [moodycamel::ConcurrentQueue](https://github.com/cameron314/concurrentqueue)
   for semaphores and fast, lock-free MPMC queues
 - [Gamepad Motion Helpers](https://github.com/JibbSmart/GamepadMotionHelpers)
