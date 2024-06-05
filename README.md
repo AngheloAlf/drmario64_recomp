@@ -43,7 +43,7 @@ The listed commits are known to be able to build this repository.
     `build/us/drmario64_uncompressed.us.z64` and put them in the root of this
     project.
 - Build the N64Recomp repo (<https://github.com/Mr-Wiseguy/N64Recomp>, commit
-  `6eb7d5bd3ee7f0b79f3fd7adbe931dccbacf7e1b`).
+  `2a2df89349ff25a3afb3a09617deb3a166efe2f3`).
 - Run `path/to/N64Recomp/build/N64Recomp drmario64.us.toml` on the root of this
   project.
 - Run `path/to/N64Recomp/build/RSPRecomp aspMain.us.toml` on the root of this

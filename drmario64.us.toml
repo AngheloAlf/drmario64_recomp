@@ -31,5 +31,5 @@ hook = [
     # Load decompressed main segment
     { func = "Main_ThreadEntry", before_vram = 0x80000544, text = "load_overlays(0x011A70, (int32_t)0x80029C50, 0x899F0);" },
     # Yield infinite loop in idle thread
-    { func = "Idle_ThreadEntry", before_vram = 0x800005FC, text = "pause_self(rdram);" },
+    { func = "Idle_ThreadEntry", before_vram = 0x800005FC, text = "yield_self_1ms(rdram);" },
 ]
