@@ -1,5 +1,16 @@
 # drmario64_recomp
 
+> [!IMPORTANT]
+> This is just a repository for testing the recompilation technology.
+> I won't make a release for this recompiled game. Don't ask for feature requests
+
+## Known issues
+
+- The pills do not get drawn correctly when falling during the game. Meaning
+  that the game is mostly unplayable for most humans (the CPU bot doesn't care
+  and will play anyways).
+- There's no multiple controller support. So just 1 player at a time.
+
 ## Dependencies
 
 - git
