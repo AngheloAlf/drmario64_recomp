@@ -1,6 +1,7 @@
 build/
 temp/
 /RecompiledFuncs/
+/RecompiledPatches/
 /rsp/
 *.o
 *.elf

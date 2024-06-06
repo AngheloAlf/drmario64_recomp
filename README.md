@@ -35,18 +35,23 @@
 
 The listed commits are known to be able to build this repository.
 
+Note that the following are Linux instructions. For building on Windows you'll
+need Visual Studio and such. Refer to the Zelda recomp repo for Windows
+instruction. You are on your own there.
+
 - Clone with submodules (`git clone --recurse-submodules` or
   `git submodule update --init --recursive`).
 - Build the decomp repo (<https://github.com/AngheloAlf/drmario64>,
-  commit `1258578aea8053cf818cd1dda3e70829747b9ab7`)
+  commit `91dab37987bdad4d100958685cc10a011d4917dd`)
   - Once it is built successfully, grab `build/us/drmario64.us.elf` and
     `build/us/drmario64_uncompressed.us.z64` and put them in the root of this
     project.
 - Build the N64Recomp repo (<https://github.com/Mr-Wiseguy/N64Recomp>, commit
-  `2a2df89349ff25a3afb3a09617deb3a166efe2f3`).
-- Run `path/to/N64Recomp/build/N64Recomp drmario64.us.toml` on the root of this
+  `2a2df89349ff25a3afb3a09617deb3a166efe2f3`) and copy the `build/N64Recomp` and
+  `build/RSPRecomp` binaries to the root of this project.
+- Run `N64Recomp drmario64.us.toml` on the root of this
   project.
-- Run `path/to/N64Recomp/build/RSPRecomp aspMain.us.toml` on the root of this
+- Run `RSPRecomp aspMain.us.toml` on the root of this
   project.
 - Build this repo by running:
 

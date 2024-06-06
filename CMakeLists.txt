@@ -57,52 +57,52 @@ file(GLOB FUNC_CXX_SOURCES ${CMAKE_SOURCE_DIR}/RecompiledFuncs/*.cpp)
 
 target_sources(RecompiledFuncs PRIVATE ${FUNC_C_SOURCES} ${FUNC_CXX_SOURCES})
 
-# # PatchesLib - Library containing the recompiled output for any custom function patches
-# add_library(PatchesLib STATIC)
+# PatchesLib - Library containing the recompiled output for any custom function patches
+add_library(PatchesLib STATIC)
 
-# target_compile_options(PatchesLib PRIVATE
-#     # -Wno-unused-but-set-variable
-#     -fno-strict-aliasing
-#     -Wno-unused-variable
-#     -Wno-implicit-function-declaration
-# )
+target_compile_options(PatchesLib PRIVATE
+    # -Wno-unused-but-set-variable
+    -fno-strict-aliasing
+    -Wno-unused-variable
+    -Wno-implicit-function-declaration
+)
 
-# target_include_directories(PatchesLib PRIVATE
-#     ${CMAKE_SOURCE_DIR}/include
-#     ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime/ultramodern/include
-#     ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime/librecomp/include
-# )
+target_include_directories(PatchesLib PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime/ultramodern/include
+    ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime/librecomp/include
+)
 
-# target_sources(PatchesLib PRIVATE
-#     ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches.c
-#     ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.c
-# )
+target_sources(PatchesLib PRIVATE
+    ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches.c
+    ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.c
+)
 
-# set_source_files_properties(${CMAKE_SOURCE_DIR}/RecompiledPatches/patches.c PROPERTIES COMPILE_FLAGS -fno-strict-aliasing)
+set_source_files_properties(${CMAKE_SOURCE_DIR}/RecompiledPatches/patches.c PROPERTIES COMPILE_FLAGS -fno-strict-aliasing)
 
 # Build patches elf
-# add_custom_target(PatchesBin
-#     COMMAND make
-#     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/patches
-#     BYPRODUCTS ${CMAKE_SOURCE_DIR}/patches/patches.bin
-# )
+add_custom_target(PatchesBin
+    COMMAND make
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/patches
+    BYPRODUCTS ${CMAKE_SOURCE_DIR}/patches/patches.bin
+)
 
 # Generate patches_bin.c from patches.bin
-# add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.c
-#     COMMAND file_to_c ${CMAKE_SOURCE_DIR}/patches/patches.bin mm_patches_bin ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.c ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.h 
-#     DEPENDS ${CMAKE_SOURCE_DIR}/patches/patches.bin
-# )
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.c
+    COMMAND file_to_c ${CMAKE_SOURCE_DIR}/patches/patches.bin mm_patches_bin ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.c ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches_bin.h 
+    DEPENDS ${CMAKE_SOURCE_DIR}/patches/patches.bin
+)
 
 # Recompile patches elf into patches.c
-# add_custom_command(OUTPUT
-#                        ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches.c
-#                        ${CMAKE_SOURCE_DIR}/RecompiledPatches/recomp_overlays.inl
-#                        ${CMAKE_SOURCE_DIR}/RecompiledPatches/funcs.h
-#                    # TODO: Look into why modifying patches requires two builds to take
-#                    COMMAND ./N64Recomp patches.toml
-#                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-#                    DEPENDS ${CMAKE_SOURCE_DIR}/patches/patches.bin
-# )
+add_custom_command(OUTPUT
+                       ${CMAKE_SOURCE_DIR}/RecompiledPatches/patches.c
+                       ${CMAKE_SOURCE_DIR}/RecompiledPatches/recomp_overlays.inl
+                       ${CMAKE_SOURCE_DIR}/RecompiledPatches/funcs.h
+                   # TODO: Look into why modifying patches requires two builds to take
+                   COMMAND ./N64Recomp patches.toml
+                   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                   DEPENDS ${CMAKE_SOURCE_DIR}/patches/patches.bin
+)
 
 # Main executable
 add_executable(drmario64_recomp)
@@ -264,7 +264,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 endif()
 
 target_link_libraries(drmario64_recomp PRIVATE
-#    PatchesLib
+    PatchesLib
     RecompiledFuncs
     SDL2
     librecomp

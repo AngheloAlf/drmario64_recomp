@@ -7,11 +7,7 @@
 #include "recomp_ui.h"
 #include "zelda_sound.h"
 #include "librecomp/helpers.hpp"
-#if 0
-#include "../patches/input.h"
-#include "../patches/graphics.h"
-#include "../patches/sound.h"
-#endif
+
 #include "ultramodern/ultramodern.hpp"
 #include "ultramodern/config.hpp"
 #include "ultramodern/rt64_layer.hpp"
