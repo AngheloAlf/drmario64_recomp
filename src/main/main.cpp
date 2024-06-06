@@ -40,9 +40,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../lib/rt64/src/contrib/stb/stb_image.h"
 
-extern "C" void init();
-/*extern "C"*/ void start(ultramodern::WindowHandle window_handle, const ultramodern::audio_callbacks_t* audio_callbacks, const ultramodern::input_callbacks_t* input_callbacks);
-
 template<typename... Ts>
 void exit_error(const char* str, Ts ...args) {
     // TODO pop up an error
@@ -398,10 +395,11 @@ int main(int argc, char** argv) {
         .set_frequency = set_frequency,
     };
 
-    ultramodern::input_callbacks_t input_callbacks{
+    ultramodern::input::callbacks_t input_callbacks{
         .poll_input = recomp::poll_inputs,
         .get_input = recomp::get_n64_input,
         .set_rumble = recomp::set_rumble,
+        .get_connected_device_info = recomp::get_connected_device_info,
     };
 
     ultramodern::events::callbacks_t thread_callbacks{

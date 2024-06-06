@@ -11,6 +11,8 @@
 
 #include "json/json.hpp"
 
+#include "ultramodern/ultramodern.hpp"
+
 namespace recomp {
     // x-macros to build input enums and arrays.
     // First parameter is the enum name, second parameter is the bit field for the input (or 0 if there is no associated one), third is the readable name.
@@ -111,6 +113,8 @@ namespace recomp {
         std::vector<InputField> analog_down;
 
         std::vector<InputField> toggle_menu;
+
+        std::vector<InputField> default_placeholder;
     };
 
     constexpr const std::vector<InputField>& get_default_mapping_for_input(const DefaultN64Mappings& defaults, const GameInput input) {
@@ -134,7 +138,7 @@ namespace recomp {
             case GameInput::Y_AXIS_POS: return defaults.analog_up;
             case GameInput::Y_AXIS_NEG: return defaults.analog_down;
             case GameInput::TOGGLE_MENU: return defaults.toggle_menu;
-            default: return std::vector<InputField>();
+            default: return defaults.default_placeholder;
         }
     }
 
@@ -150,8 +154,9 @@ namespace recomp {
     InputField& get_input_binding(GameInput input, size_t binding_index, InputDevice device);
     void set_input_binding(GameInput input, size_t binding_index, InputDevice device, InputField value);
 
-    void get_n64_input(uint16_t* buttons_out, float* x_out, float* y_out);
-    void set_rumble(bool);
+    bool get_n64_input(int controller_num, uint16_t* buttons_out, float* x_out, float* y_out);
+    ultramodern::input::connected_device_info_t get_connected_device_info(int controller_num);
+    void set_rumble(int controller_num, bool);
     void update_rumble();
     void handle_events();
     

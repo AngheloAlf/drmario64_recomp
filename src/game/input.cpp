@@ -446,8 +446,10 @@ void recomp::poll_inputs() {
     #endif
 }
 
-void recomp::set_rumble(bool on) {
-    InputState.rumble_active = on;
+void recomp::set_rumble(int controller_num, bool on) {
+    if (controller_num == 0) {
+        InputState.rumble_active = on;
+    }
 }
 
 static float smoothstep(float from, float to, float amount) {

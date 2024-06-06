@@ -75,7 +75,7 @@ void recomp::set_input_binding(recomp::GameInput input, size_t binding_index, re
     }
 }
 
-void recomp::get_n64_input(uint16_t* buttons_out, float* x_out, float* y_out) {
+bool recomp::get_n64_input(int controller_num, uint16_t* buttons_out, float* x_out, float* y_out) {
     uint16_t cur_buttons = 0;
     float cur_x = 0.0f;
     float cur_y = 0.0f;
@@ -107,4 +107,23 @@ void recomp::get_n64_input(uint16_t* buttons_out, float* x_out, float* y_out) {
     *buttons_out = cur_buttons;
     *x_out = std::clamp(cur_x, -1.0f, 1.0f);
     *y_out = std::clamp(cur_y, -1.0f, 1.0f);
+
+    // all controllers connected
+    return true;
+}
+
+ultramodern::input::connected_device_info_t recomp::get_connected_device_info(int controller_num) {
+    switch (controller_num) {
+    case 0:
+        return {
+            .connected_device = ultramodern::input::Device::Controller,
+            .connected_pak = ultramodern::input::Pak::RumblePak,
+        };
+
+    default:
+        return {
+            .connected_device = ultramodern::input::Device::Controller,
+            .connected_pak = ultramodern::input::Pak::RumblePak,
+        };
+    }
 }
