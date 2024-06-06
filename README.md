@@ -44,15 +44,13 @@ instruction. You are on your own there.
 - Build the decomp repo (<https://github.com/AngheloAlf/drmario64>,
   commit `91dab37987bdad4d100958685cc10a011d4917dd`)
   - Once it is built successfully, grab `build/us/drmario64.us.elf` and
-    `build/us/drmario64_uncompressed.us.z64` and put them in the root of this
-    project.
+    `build/us/drmario64_uncompressed.us.z64` and put them in the `recompiled`
+    folder of this project.
 - Build the N64Recomp repo (<https://github.com/Mr-Wiseguy/N64Recomp>, commit
   `2a2df89349ff25a3afb3a09617deb3a166efe2f3`) and copy the `build/N64Recomp` and
   `build/RSPRecomp` binaries to the root of this project.
-- Run `N64Recomp drmario64.us.toml` on the root of this
-  project.
-- Run `RSPRecomp aspMain.us.toml` on the root of this
-  project.
+- Run `N64Recomp recompiled/drmario64.us.toml` on the root of this project.
+- Run `RSPRecomp recompiled/aspMain.us.toml` on the root of this project.
 - Build this repo by running:
 
 ```bash

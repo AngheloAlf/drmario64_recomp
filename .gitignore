@@ -3,6 +3,9 @@ temp/
 /RecompiledFuncs/
 /RecompiledPatches/
 /rsp/
+recompiled/funcs/
+recompiled/rsp/
+recompiled/patches/
 *.o
 *.elf
 *.z64

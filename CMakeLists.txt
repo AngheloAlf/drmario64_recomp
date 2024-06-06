@@ -35,27 +35,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime)
 
 target_include_directories(rt64 PRIVATE ${CMAKE_BINARY_DIR}/rt64/src)
 
-# RecompiledFuncs - Library containing the primary recompiler output
-add_library(RecompiledFuncs STATIC)
-
-target_compile_options(RecompiledFuncs PRIVATE
-    # -Wno-unused-but-set-variable
-    -fno-strict-aliasing
-    -ggdb
-    -Wno-unused-variable
-    -Wno-implicit-function-declaration
-)
-
-target_include_directories(RecompiledFuncs PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime/ultramodern/include
-    ${CMAKE_SOURCE_DIR}/lib/N64ModernRuntime/librecomp/include
-)
-
-file(GLOB FUNC_C_SOURCES ${CMAKE_SOURCE_DIR}/RecompiledFuncs/*.c)
-file(GLOB FUNC_CXX_SOURCES ${CMAKE_SOURCE_DIR}/RecompiledFuncs/*.cpp)
-
-target_sources(RecompiledFuncs PRIVATE ${FUNC_C_SOURCES} ${FUNC_CXX_SOURCES})
+add_subdirectory(${CMAKE_SOURCE_DIR}/recompiled)
 
 # PatchesLib - Library containing the recompiled output for any custom function patches
 add_library(PatchesLib STATIC)
@@ -136,8 +116,6 @@ set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/ui/ui_color_hack.cpp
     ${CMAKE_SOURCE_DIR}/src/ui/ui_rml_hacks.cpp
 
-    ${CMAKE_SOURCE_DIR}/rsp/aspMain.cpp
-
     ${CMAKE_SOURCE_DIR}/lib/RmlUi/Backends/RmlUi_Platform_SDL.cpp
 )
 
@@ -167,17 +145,14 @@ target_include_directories(drmario64_recomp PRIVATE
 if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
     target_compile_options(drmario64_recomp PRIVATE
         -march=nehalem
-        -fno-strict-aliasing
-        -fms-extensions
-        -ggdb
-    )
-else()
-    target_compile_options(drmario64_recomp PRIVATE
-        -fno-strict-aliasing
-        -fms-extensions
-        -ggdb
     )
 endif()
+
+target_compile_options(drmario64_recomp PRIVATE
+    -fno-strict-aliasing
+    -fms-extensions
+    -ggdb
+)
 
 # Add ASAN to everything
 # add_compile_options(-fsanitize=address)
@@ -265,7 +240,8 @@ endif()
 
 target_link_libraries(drmario64_recomp PRIVATE
     PatchesLib
-    RecompiledFuncs
+    recompiled_rsp
+    recompiled_funcs
     SDL2
     librecomp
     ultramodern
