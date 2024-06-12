@@ -10,6 +10,9 @@
   that the game is mostly unplayable for most humans (the CPU bot doesn't care
   and will play anyways).
 - There's no multiple controller support. So just 1 player at a time.
+- The extended aspect ratio is very jank.
+- Application segfaults when it is closed.
+- Very untested.
 
 ## Dependencies
 
