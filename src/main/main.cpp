@@ -337,6 +337,71 @@ std::vector<recomp::GameEntry> supported_games = {
     },
 };
 
+// TODO: move somewhere else
+std::string get_game_thread_name(const OSThread* t) {
+    std::string name = "[Game] ";
+
+    switch (t->id) {
+        case 0:
+            switch (t->priority) {
+                case 150:
+                    name += "PIMGR";
+                    break;
+
+                case 254:
+                    name += "VIMGR";
+                    break;
+            }
+            break;
+
+        case 1:
+            name += "IDLE";
+            break;
+
+        case 3:
+            switch (t->priority) {
+                case 10:
+                    name += "MAIN";
+                    break;
+
+                case 50:
+                    name += "MUSIC";
+                    break;
+
+                default:
+                    name += std::to_string(t->id);
+                    break;
+            }
+            break;
+
+        case 5:
+            name += "GRAPHIC";
+            break;
+
+        case 6:
+            name += "BG TASK";
+            break;
+
+        case 17:
+            name += "NN GRAPH";
+            break;
+
+        case 18:
+            name += "NN AUDIO";
+            break;
+
+        case 19:
+            name += "NN EVENT";
+            break;
+
+        default:
+            name += std::to_string(t->id);
+            break;
+    }
+
+    return name;
+}
+
 
 int main(int argc, char** argv) {
 
@@ -416,7 +481,11 @@ int main(int argc, char** argv) {
         .message_box = recompui::message_box,
     };
 
-    recomp::start({}, rsp_callbacks, renderer_callbacks, audio_callbacks, input_callbacks, gfx_callbacks, thread_callbacks, error_handling_callbacks);
+    ultramodern::threads::callbacks_t threads_callbacks{
+        .get_game_thread_name = get_game_thread_name,
+    };
+
+    recomp::start({}, rsp_callbacks, renderer_callbacks, audio_callbacks, input_callbacks, gfx_callbacks, thread_callbacks, error_handling_callbacks, threads_callbacks);
 
     NFD_Quit();
 

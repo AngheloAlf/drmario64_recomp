@@ -5,7 +5,10 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "include",
-                "ultramodern",
+                "lib/N64ModernRuntime/ultramodern/include",
+                "lib/N64ModernRuntime/librecomp/include/librecomp",
+                "lib/N64ModernRuntime/thirdparty/concurrentqueue",
+                "lib/N64ModernRuntime/thirdparty",
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
