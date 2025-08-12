@@ -90,6 +90,8 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "expected": "cpp"
+        "expected": "cpp",
+        "coroutine": "cpp",
+        "ranges": "cpp"
     }
 }

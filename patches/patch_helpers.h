@@ -5,7 +5,7 @@
 // TODO
 // #include "ultra64.h"
 #else
-#include "librecomp/recomp.h"
+#include "recomp.h"
 #endif
 
 #ifdef __cplusplus

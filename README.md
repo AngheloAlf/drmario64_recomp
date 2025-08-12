@@ -71,7 +71,6 @@ the decomp.
 ## Libraries Used and Projects Referenced
 
 - [Zelda64Recomp](https://github.com/Mr-Wiseguy/Zelda64Recomp)
-  (commit 452d2af06767d82be960e027dd14b9c4f0e8bf31)
   most files were copied from here.
 - [Dr. Mario 64 decompilation](https://github.com/AngheloAlf/drmario64)
 - [RT64](https://github.com/rt64/rt64) for the project's rendering engine

@@ -32,7 +32,9 @@
 #include "zelda_config.h"
 #include "zelda_sound.h"
 #include "zelda_render.h"
+#include "zelda_support.h"
 #include "zelda_game.h"
+// #include "recomp_data.h"
 #include "ovl_patches.hpp"
 #include "librecomp/game.hpp"
 #include "librecomp/mods.hpp"
@@ -601,14 +603,11 @@ int main(int argc, char** argv) {
     SDL_InitSubSystem(SDL_INIT_AUDIO);
     reset_audio(48000);
 
-    // TODO
-    #if 0
     // Source controller mappings file
     std::u8string controller_db_path = (zelda64::get_program_path() / "recompcontrollerdb.txt").u8string();
     if (SDL_GameControllerAddMappingsFromFile(reinterpret_cast<const char *>(controller_db_path.c_str())) < 0) {
         fprintf(stderr, "Failed to load controller mappings: %s\n", SDL_GetError());
     }
-    #endif
 
     recomp::register_config_path(zelda64::get_app_folder_path());
 

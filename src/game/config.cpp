@@ -2,6 +2,7 @@
 #include "recomp_input.h"
 #include "zelda_sound.h"
 #include "zelda_render.h"
+#include "zelda_support.h"
 #include "ultramodern/config.hpp"
 #include "librecomp/files.hpp"
 #include <filesystem>
@@ -13,13 +14,14 @@
 #elif defined(__linux__)
 #include <unistd.h>
 #include <pwd.h>
+#elif defined(__APPLE__)
+#include "apple/rt64_apple.h"
 #endif
 
 constexpr std::u8string_view general_filename = u8"general.json";
 constexpr std::u8string_view graphics_filename = u8"graphics.json";
 constexpr std::u8string_view controls_filename = u8"controls.json";
 constexpr std::u8string_view sound_filename = u8"sound.json";
-constexpr std::u8string_view program_id = u8"Zelda64Recompiled";
 
 constexpr auto res_default            = ultramodern::renderer::Resolution::Auto;
 constexpr auto hr_default             = ultramodern::renderer::HUDRatioMode::Clamp16x9;
@@ -72,7 +74,7 @@ T from_or_default(const json& j, const std::string& key, T default_value) {
     else {
         ret = default_value;
     }
-    
+
     return ret;
 }
 
@@ -130,10 +132,18 @@ namespace recomp {
 }
 
 std::filesystem::path zelda64::get_app_folder_path() {
-   // directly check for portable.txt (windows and native linux binary)    
+   // directly check for portable.txt (windows and native linux binary)
    if (std::filesystem::exists("portable.txt")) {
        return std::filesystem::current_path();
    }
+
+#if defined(__APPLE__)
+   // Check for portable file in the directory containing the app bundle.
+   const auto app_bundle_path = zelda64::get_bundle_directory().parent_path();
+   if (std::filesystem::exists(app_bundle_path / "portable.txt")) {
+       return app_bundle_path;
+   }
+#endif
 
    std::filesystem::path recomp_dir{};
 
@@ -146,16 +156,27 @@ std::filesystem::path zelda64::get_app_folder_path() {
    }
 
    CoTaskMemFree(known_path);
-#elif defined(__linux__)
-   // check for APP_FOLDER_PATH env var used by AppImage
+#elif defined(__linux__) || defined(__APPLE__)
+   // check for APP_FOLDER_PATH env var
    if (getenv("APP_FOLDER_PATH") != nullptr) {
        return std::filesystem::path{getenv("APP_FOLDER_PATH")};
    }
 
+#if defined(__APPLE__)
+   const auto supportdir = zelda64::get_application_support_directory();
+   if (supportdir) {
+       return *supportdir / zelda64::program_id;
+   }
+#endif
+
    const char *homedir;
 
    if ((homedir = getenv("HOME")) == nullptr) {
+    #if defined(__linux__)
        homedir = getpwuid(getuid())->pw_dir;
+    #elif defined(__APPLE__)
+        homedir = GetHomeDirectory();
+    #endif
    }
 
    if (homedir != nullptr) {
@@ -207,7 +228,7 @@ bool save_json_with_backups(const std::filesystem::path& path, const nlohmann::j
     return recomp::finalize_output_file_with_backup(path);
 }
 
-bool save_general_config(const std::filesystem::path& path) {    
+bool save_general_config(const std::filesystem::path& path) {
     nlohmann::json config_json{};
 
     zelda64::to_json(config_json["targeting_mode"], zelda64::get_targeting_mode());
@@ -221,7 +242,7 @@ bool save_general_config(const std::filesystem::path& path) {
     config_json["analog_cam_mode"] = zelda64::get_analog_cam_mode();
     config_json["analog_camera_invert_mode"] = zelda64::get_analog_camera_invert_mode();
     config_json["debug_mode"] = zelda64::get_debug_mode_enabled();
-    
+
     return save_json_with_backups(path, config_json);
 }
 
@@ -286,7 +307,10 @@ void assign_all_mappings(recomp::InputDevice device, const recomp::DefaultN64Map
     assign_mapping_complete(device, recomp::GameInput::X_AXIS_POS, values.analog_right);
     assign_mapping_complete(device, recomp::GameInput::Y_AXIS_NEG, values.analog_down);
     assign_mapping_complete(device, recomp::GameInput::Y_AXIS_POS, values.analog_up);
+
     assign_mapping_complete(device, recomp::GameInput::TOGGLE_MENU, values.toggle_menu);
+    assign_mapping_complete(device, recomp::GameInput::ACCEPT_MENU, values.accept_menu);
+    assign_mapping_complete(device, recomp::GameInput::APPLY_MENU, values.apply_menu);
 };
 
 void zelda64::reset_input_bindings() {
@@ -300,6 +324,19 @@ void zelda64::reset_cont_input_bindings() {
 
 void zelda64::reset_kb_input_bindings() {
     assign_all_mappings(recomp::InputDevice::Keyboard, recomp::default_n64_keyboard_mappings);
+}
+
+void zelda64::reset_single_input_binding(recomp::InputDevice device, recomp::GameInput input) {
+    assign_mapping_complete(
+        device,
+        input,
+        recomp::get_default_mapping_for_input(
+            device == recomp::InputDevice::Keyboard ?
+                recomp::default_n64_keyboard_mappings :
+                recomp::default_n64_controller_mappings,
+            input
+        )
+    );
 }
 
 void reset_graphics_options() {
@@ -423,7 +460,7 @@ bool save_sound_config(const std::filesystem::path& path) {
     config_json["main_volume"] = zelda64::get_main_volume();
     config_json["bgm_volume"] = zelda64::get_bgm_volume();
     config_json["low_health_beeps"] = zelda64::get_low_health_beeps_enabled();
-    
+
     return save_json_with_backups(path, config_json);
 }
 
@@ -485,7 +522,7 @@ void zelda64::save_config() {
     }
 
     std::filesystem::create_directories(recomp_dir);
-    
+
     // TODO error handling for failing to save config files.
 
     save_general_config(recomp_dir / general_filename);
