@@ -1,14 +1,18 @@
 [input]
 entrypoint = 0x80000400
 # Paths are relative to the location of this config file.
-elf_path = "drmario64.us.elf"
 output_func_path = "RecompiledFuncs"
+# elf_path = "drmario64.us.elf"
+symbols_file_path = "drmario64syms/drmario64.us.syms.toml"
+rom_file_path = "drmario64_uncompressed.us.z64"
 
 [patches]
 stubs = [
 ]
 
 ignored = [
+    "aspMainTextStart",
+    "gspS2DEX_fifoTextStart"
 ]
 
 function_sizes = [

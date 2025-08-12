@@ -18,6 +18,13 @@
 #else
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_syswm.h"
+// Undefine x11 macros that get included by SDL_syswm.h.
+#undef None
+#undef Status
+#undef LockMask
+#undef ControlMask
+#undef Success
+#undef Always
 #endif
 
 #include "recomp_ui.h"
@@ -25,11 +32,19 @@
 #include "zelda_config.h"
 #include "zelda_sound.h"
 #include "zelda_render.h"
+#include "zelda_game.h"
 #include "ovl_patches.hpp"
 #include "librecomp/game.hpp"
+#include "librecomp/mods.hpp"
+#include "librecomp/helpers.hpp"
 
-#ifdef HAS_MM_SHADER_CACHE
-#include "mm_shader_cache.h"
+#if 0
+#include "../../patches/graphics.h"
+#include "../../patches/input.h"
+#include "../../patches/sound.h"
+#include "../../patches/misc_funcs.h"
+
+#include "mods/mm_recomp_dpad_builtin.h"
 #endif
 
 #ifdef _WIN32
@@ -38,15 +53,17 @@
 #include "SDL_syswm.h"
 #endif
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "../../lib/rt64/src/contrib/stb/stb_image.h"
+
+const std::string version_string = "0.1.0";
 
 template<typename... Ts>
 void exit_error(const char* str, Ts ...args) {
     // TODO pop up an error
     ((void)fprintf(stderr, str, args), ...);
     assert(false);
-    std::quick_exit(EXIT_FAILURE);
+
+    ULTRAMODERN_QUICK_EXIT();
 }
 
 ultramodern::gfx_callbacks_t::gfx_data_t create_gfx() {
@@ -57,13 +74,11 @@ ultramodern::gfx_callbacks_t::gfx_data_t create_gfx() {
     SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
-#if defined(__linux__)
-    SDL_SetHint(SDL_HINT_VIDEODRIVER, "x11");
-#endif
-
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) > 0) {
         exit_error("Failed to initialize SDL2: %s\n", SDL_GetError());
     }
+
+    fprintf(stdout, "SDL Video Driver: %s\n", SDL_GetCurrentVideoDriver());
 
     return {};
 }
@@ -120,7 +135,15 @@ bool SetImageAsIcon(const char* filename, SDL_Window* window)
 SDL_Window* window;
 
 ultramodern::renderer::WindowHandle create_window(ultramodern::gfx_callbacks_t::gfx_data_t) {
-    window = SDL_CreateWindow("Zelda 64: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 960, SDL_WINDOW_RESIZABLE );
+    uint32_t flags = SDL_WINDOW_RESIZABLE;
+
+#if defined(__APPLE__)
+    flags |= SDL_WINDOW_METAL;
+#elif defined(RT64_SDL_WINDOW_VULKAN)
+    flags |= SDL_WINDOW_VULKAN;
+#endif
+
+    window = SDL_CreateWindow("Zelda 64: Recompiled", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 960,  flags);
 #if defined(__linux__)
     SetImageAsIcon("icons/512.png",window);
     if (ultramodern::renderer::get_graphics_config().wm_option == ultramodern::renderer::WindowMode::Fullscreen) { // TODO: Remove once RT64 gets native fullscreen support on Linux
@@ -140,14 +163,11 @@ ultramodern::renderer::WindowHandle create_window(ultramodern::gfx_callbacks_t::
 
 #if defined(_WIN32)
     return ultramodern::renderer::WindowHandle{ wmInfo.info.win.window, GetCurrentThreadId() };
-#elif defined(__ANDROID__)
-    static_assert(false && "Unimplemented");
-#elif defined(__linux__)
-    if (wmInfo.subsystem != SDL_SYSWM_X11) {
-        exit_error("Unsupported SDL2 video driver \"%s\". Only X11 is supported on Linux.\n", SDL_GetCurrentVideoDriver());
-    }
-
-    return ultramodern::renderer::WindowHandle{ wmInfo.info.x11.display, wmInfo.info.x11.window };
+#elif defined(__linux__) || defined(__ANDROID__)
+    return ultramodern::renderer::WindowHandle{ window };
+#elif defined(__APPLE__)
+    SDL_MetalView view = SDL_Metal_CreateView(window);
+    return ultramodern::renderer::WindowHandle{ wmInfo.info.cocoa.window,  SDL_Metal_GetLayer(view) };
 #else
     static_assert(false && "Unimplemented");
 #endif
@@ -328,82 +348,222 @@ std::vector<recomp::GameEntry> supported_games = {
         .rom_hash = 0x960e3703f29d996dULL,
         .internal_name = "DR.MARIO 64         ",
         .game_id = u8"drmario64.us",
-#ifdef HAS_MM_SHADER_CACHE
-        .cache_data = {mm_shader_cache_bytes, sizeof(mm_shader_cache_bytes)},
-#endif
+        .mod_game_id = "drmario64",
+        .save_type = recomp::SaveType::Eep4k,
         .is_enabled = true,
+        // .decompression_routine = zelda64::decompress,
+        .has_compressed_code = false, // TODO: change to true
         .entrypoint_address = get_entrypoint_address(),
         .entrypoint = recomp_entrypoint,
     },
 };
 
 // TODO: move somewhere else
-std::string get_game_thread_name(const OSThread* t) {
-    std::string name = "[Game] ";
+namespace zelda64 {
+    std::string get_game_thread_name(const OSThread* t) {
+        std::string name = "[Game] ";
 
-    switch (t->id) {
-        case 0:
-            switch (t->priority) {
-                case 150:
-                    name += "PIMGR";
-                    break;
+        switch (t->id) {
+            case 0:
+                switch (t->priority) {
+                    case 150:
+                        name += "PIMGR";
+                        break;
 
-                case 254:
-                    name += "VIMGR";
-                    break;
-            }
-            break;
+                    case 254:
+                        name += "VIMGR";
+                        break;
+                }
+                break;
 
-        case 1:
-            name += "IDLE";
-            break;
+            case 1:
+                name += "IDLE";
+                break;
 
-        case 3:
-            switch (t->priority) {
-                case 10:
-                    name += "MAIN";
-                    break;
+            case 3:
+                switch (t->priority) {
+                    case 10:
+                        name += "MAIN";
+                        break;
 
-                case 50:
-                    name += "MUSIC";
-                    break;
+                    case 50:
+                        name += "MUSIC";
+                        break;
 
-                default:
-                    name += std::to_string(t->id);
-                    break;
-            }
-            break;
+                    default:
+                        name += std::to_string(t->id);
+                        break;
+                }
+                break;
 
-        case 5:
-            name += "GRAPHIC";
-            break;
+            case 5:
+                name += "GRAPHIC";
+                break;
 
-        case 6:
-            name += "BG TASK";
-            break;
+            case 6:
+                name += "BG TASK";
+                break;
 
-        case 17:
-            name += "NN GRAPH";
-            break;
+            case 17:
+                name += "NN GRAPH";
+                break;
 
-        case 18:
-            name += "NN AUDIO";
-            break;
+            case 18:
+                name += "NN AUDIO";
+                break;
 
-        case 19:
-            name += "NN EVENT";
-            break;
+            case 19:
+                name += "NN EVENT";
+                break;
 
-        default:
-            name += std::to_string(t->id);
-            break;
+            default:
+                name += std::to_string(t->id);
+                break;
+        }
+
+        return name;
     }
-
-    return name;
 }
 
+#ifdef _WIN32
+
+struct PreloadContext {
+    HANDLE handle;
+    HANDLE mapping_handle;
+    SIZE_T size;
+    PVOID view;
+};
+
+bool preload_executable(PreloadContext& context) {
+    wchar_t module_name[MAX_PATH];
+    GetModuleFileNameW(NULL, module_name, MAX_PATH);
+
+    context.handle = CreateFileW(module_name, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (context.handle == INVALID_HANDLE_VALUE) {
+        fprintf(stderr, "Failed to load executable into memory!");
+        context = {};
+        return false;
+    }
+
+    LARGE_INTEGER module_size;
+    if (!GetFileSizeEx(context.handle, &module_size)) {
+        fprintf(stderr, "Failed to get size of executable!");
+        CloseHandle(context.handle);
+        context = {};
+        return false;
+    }
+
+    context.size = module_size.QuadPart;
+
+    context.mapping_handle = CreateFileMappingW(context.handle, nullptr, PAGE_READONLY, 0, 0, nullptr);
+    if (context.mapping_handle == nullptr) {
+        fprintf(stderr, "Failed to create file mapping of executable!");
+        CloseHandle(context.handle);
+        context = {};
+        return EXIT_FAILURE;
+    }
+
+    context.view = MapViewOfFile(context.mapping_handle, FILE_MAP_READ, 0, 0, 0);
+    if (context.view == nullptr) {
+        fprintf(stderr, "Failed to map view of of executable!");
+        CloseHandle(context.mapping_handle);
+        CloseHandle(context.handle);
+        context = {};
+        return false;
+    }
+
+    DWORD pid = GetCurrentProcessId();
+    HANDLE process_handle = OpenProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_INFORMATION, FALSE, pid);
+    if (process_handle == nullptr) {
+        fprintf(stderr, "Failed to open own process!");
+        CloseHandle(context.mapping_handle);
+        CloseHandle(context.handle);
+        context = {};
+        return false;
+    }
+
+    SIZE_T minimum_set_size, maximum_set_size;
+    if (!GetProcessWorkingSetSize(process_handle, &minimum_set_size, &maximum_set_size)) {
+        fprintf(stderr, "Failed to get working set size!");
+        CloseHandle(context.mapping_handle);
+        CloseHandle(context.handle);
+        context = {};
+        return false;
+    }
+
+    if (!SetProcessWorkingSetSize(process_handle, minimum_set_size + context.size, maximum_set_size + context.size)) {
+        fprintf(stderr, "Failed to set working set size!");
+        CloseHandle(context.mapping_handle);
+        CloseHandle(context.handle);
+        context = {};
+        return false;
+    }
+
+    if (VirtualLock(context.view, context.size) == 0) {
+        fprintf(stderr, "Failed to lock view of executable! (Error: %08lx)\n", GetLastError());
+        CloseHandle(context.mapping_handle);
+        CloseHandle(context.handle);
+        context = {};
+        return false;
+    }
+    
+    return true;
+}
+
+void release_preload(PreloadContext& context) {
+    VirtualUnlock(context.view, context.size);
+    CloseHandle(context.mapping_handle);
+    CloseHandle(context.handle);
+    context = {};
+}
+
+#else
+
+struct PreloadContext {
+
+};
+
+// TODO implement on other platforms
+bool preload_executable(PreloadContext& context) {
+    return false;
+}
+
+void release_preload(PreloadContext& context) {
+}
+
+#endif
+
+void enable_texture_pack(recomp::mods::ModContext& context, const recomp::mods::ModHandle& mod) {
+    zelda64::renderer::enable_texture_pack(context, mod);
+}
+
+void disable_texture_pack(recomp::mods::ModContext&, const recomp::mods::ModHandle& mod) {
+    zelda64::renderer::disable_texture_pack(mod);
+}
+
+void reorder_texture_pack(recomp::mods::ModContext&) {
+    zelda64::renderer::trigger_texture_pack_update();
+}
+
+#define REGISTER_FUNC(name) recomp::overlays::register_base_export(#name, name)
 
 int main(int argc, char** argv) {
+    (void)argc;
+    (void)argv;
+    recomp::Version project_version{};
+    if (!recomp::Version::from_string(version_string, project_version)) {
+        ultramodern::error_handling::message_box(("Invalid version string: " + version_string).c_str());
+        return EXIT_FAILURE;
+    }
+
+    // Map this executable into memory and lock it, which should keep it in physical memory. This ensures
+    // that there are no stutters from the OS having to load new pages of the executable whenever a new code page is run.
+    PreloadContext preload_context;
+    bool preloaded = preload_executable(preload_context);
+
+    if (!preloaded) {
+        fprintf(stderr, "Failed to preload executable!\n");
+    }
 
 #ifdef _WIN32
     // Set up console output to accept UTF-8 on windows
@@ -428,21 +588,59 @@ int main(int argc, char** argv) {
     // Force wasapi on Windows, as there seems to be some issue with sample queueing with directsound currently.
     SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
 #endif
-    //printf("Current dir: %ls\n", std::filesystem::current_path().c_str());
+
+#if defined(__linux__) && defined(RECOMP_FLATPAK)
+    // When using Flatpak, applications tend to launch from the home directory by default.
+    // Mods might use the current working directory to store the data, so we switch it to a directory
+    // with persistent data storage and write permissions under Flatpak to ensure it works.
+    std::error_code ec;
+    std::filesystem::current_path("/var/data", ec);
+#endif
 
     // Initialize SDL audio and set the output frequency.
     SDL_InitSubSystem(SDL_INIT_AUDIO);
     reset_audio(48000);
+
+    // TODO
+    #if 0
+    // Source controller mappings file
+    std::u8string controller_db_path = (zelda64::get_program_path() / "recompcontrollerdb.txt").u8string();
+    if (SDL_GameControllerAddMappingsFromFile(reinterpret_cast<const char *>(controller_db_path.c_str())) < 0) {
+        fprintf(stderr, "Failed to load controller mappings: %s\n", SDL_GetError());
+    }
+    #endif
+
+    recomp::register_config_path(zelda64::get_app_folder_path());
 
     // Register supported games and patches
     for (const auto& game : supported_games) {
         recomp::register_game(game);
     }
 
+    // TODO
+    #if 0
+    recomp::mods::register_embedded_mod("mm_recomp_dpad_builtin", { (const uint8_t*)(mm_recomp_dpad_builtin), std::size(mm_recomp_dpad_builtin)});
+
+    REGISTER_FUNC(recomp_get_window_resolution);
+    REGISTER_FUNC(recomp_get_target_aspect_ratio);
+    REGISTER_FUNC(recomp_get_target_framerate);
+    REGISTER_FUNC(recomp_get_autosave_enabled);
+    REGISTER_FUNC(recomp_get_analog_cam_enabled);
+    REGISTER_FUNC(recomp_get_camera_inputs);
+    REGISTER_FUNC(recomp_get_targeting_mode);
+    REGISTER_FUNC(recomp_get_bgm_volume);
+    REGISTER_FUNC(recomp_get_low_health_beeps_enabled);
+    REGISTER_FUNC(recomp_get_gyro_deltas);
+    REGISTER_FUNC(recomp_get_mouse_deltas);
+    REGISTER_FUNC(recomp_get_inverted_axes);
+    REGISTER_FUNC(recomp_get_analog_inverted_axes);
+    recompui::register_ui_exports();
+    recomputil::register_data_api_exports();
+    #endif
+
     zelda64::register_overlays();
     zelda64::register_patches();
-
-    recomp::register_config_path(zelda64::get_app_folder_path());
+    // recomputil::init_extended_actor_data();
     zelda64::load_config();
 
     recomp::rsp::callbacks_t rsp_callbacks{
@@ -482,12 +680,40 @@ int main(int argc, char** argv) {
     };
 
     ultramodern::threads::callbacks_t threads_callbacks{
-        .get_game_thread_name = get_game_thread_name,
+        .get_game_thread_name = zelda64::get_game_thread_name,
     };
 
-    recomp::start({}, rsp_callbacks, renderer_callbacks, audio_callbacks, input_callbacks, gfx_callbacks, thread_callbacks, error_handling_callbacks, threads_callbacks);
+    // Register the texture pack content type with rt64.json as its content file.
+    recomp::mods::ModContentType texture_pack_content_type{
+        .content_filename = "rt64.json",
+        .allow_runtime_toggle = true,
+        .on_enabled = enable_texture_pack,
+        .on_disabled = disable_texture_pack,
+        .on_reordered = reorder_texture_pack,
+    };
+    auto texture_pack_content_type_id = recomp::mods::register_mod_content_type(texture_pack_content_type);
+
+    // Register the .rtz texture pack file format with the previous content type as its only allowed content type.
+    recomp::mods::register_mod_container_type("rtz", std::vector{ texture_pack_content_type_id }, false);
+
+    recomp::start(
+        project_version,
+        {},
+        rsp_callbacks,
+        renderer_callbacks,
+        audio_callbacks,
+        input_callbacks,
+        gfx_callbacks,
+        thread_callbacks,
+        error_handling_callbacks,
+        threads_callbacks
+    );
 
     NFD_Quit();
+
+    if (preloaded) {
+        release_preload(preload_context);
+    }
 
     return EXIT_SUCCESS;
 }
